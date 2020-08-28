@@ -1,1 +1,1 @@
-# band_mock_server_cookie
+# band 클론코딩 모의외주 서버
