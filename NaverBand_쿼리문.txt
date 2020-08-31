@@ -38,11 +38,11 @@ ALTER TABLE Ads COMMENT '광고';
 -- User Table Create SQL
 CREATE TABLE AdsImage
 (
-    `adsId`      INT          NOT NULL    COMMENT '광고 id', 
-    `adsSubImg`  TEXT         NOT NULL    COMMENT '광고 이미지 url', 
-    `createdAt`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`  TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
-    `isDeleted`  CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    `adsId`      INT            NOT NULL    COMMENT '광고 id', 
+    `adsSubImg`  VARCHAR(45)    NOT NULL    COMMENT '광고 이미지 url', 
+    `createdAt`  TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`  TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`  CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
     PRIMARY KEY (adsId, adsSubImg)
 );
 
@@ -52,20 +52,22 @@ ALTER TABLE AdsImage COMMENT '광고 상세 이미지';
 -- User Table Create SQL
 CREATE TABLE Band
 (
-    `bandId`             INT            NOT NULL    AUTO_INCREMENT COMMENT '밴드 id', 
-    `bandName`           VARCHAR(45)    NULL        COMMENT '밴드 이름', 
-    `category`           VARCHAR(45)    NULL        DEFAULT '일반' COMMENT '카테고리', 
-    `bandImg`            VARCHAR(45)    NULL        COMMENT '대표 사진 url', 
-    `isOpened`           CHAR(1)        NULL        DEFAULT 'Y' COMMENT '공개 유무', 
-    `registerQuestion`   TEXT           NULL        COMMENT '가입 질문', 
-    `registerAnswer`     TEXT           NULL        COMMENT '가입 질문 응답', 
-    `maxMemberNo`        INT            NULL        COMMENT '최대 멤버 수', 
-    `bandIntroduction`   TEXT           NULL        COMMENT '밴드 소개', 
-    `isRegisterNoticed`  CHAR(1)        NULL        DEFAULT 'N' COMMENT '가입 알림 설정', 
-    `isSecretAvailable`  CHAR(1)        NULL        DEFAULT 'N' COMMENT '비밀 댓글 가능', 
-    `createdAt`          TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`          TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
-    `isDeleted`          CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    `bandId`                  INT            NOT NULL    AUTO_INCREMENT COMMENT '밴드 id', 
+    `bandName`                VARCHAR(45)    NULL        COMMENT '밴드 이름', 
+    `category`                VARCHAR(45)    NULL        DEFAULT '일반' COMMENT '카테고리', 
+    `bandImg`                 VARCHAR(45)    NULL        COMMENT '대표 사진 url', 
+    `isOpened`                CHAR(1)        NULL        DEFAULT 'Y' COMMENT '공개 유무', 
+    `existRegisterQustion`    CHAR(1)        NULL        DEFAULT 'N' COMMENT '가입 질문 유무', 
+    `registerQuestion`        TEXT           NULL        COMMENT '가입 질문', 
+    `bandIntroduction`        TEXT           NULL        COMMENT '밴드 소개', 
+    `isRegisterNoticed`       CHAR(1)        NULL        DEFAULT 'N' COMMENT '가입 알림 설정', 
+    `isSecretAvailable`       CHAR(1)        NULL        DEFAULT 'N' COMMENT '비밀 댓글 가능', 
+    `needRegisterPermission`  CHAR(1)        NULL        DEFAULT 'Y' COMMENT '가입 승인 유무', 
+    `locationLatitude`        DOUBLE         NULL        COMMENT '위치 경도', 
+    `locationLongitude`       DOUBLE         NULL        COMMENT '위치 위도', 
+    `createdAt`               TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`               TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`               CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
     PRIMARY KEY (bandId)
 );
 
@@ -348,7 +350,7 @@ CREATE TABLE MoneyDivdeMember
     `createdAt`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
     `updatedAt`  TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
     `isDeleted`  CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
-    PRIMARY KEY (postId)
+    PRIMARY KEY (postId, userId)
 );
 
 ALTER TABLE MoneyDivdeMember COMMENT 'N빵 유저';
@@ -375,6 +377,7 @@ CREATE TABLE BandComment
     `commentId`        INT          NOT NULL    AUTO_INCREMENT COMMENT '댓글 id', 
     `parentCommentId`  INT          NULL        COMMENT '부모 댓글 id', 
     `commentContent`   TEXT         NULL        COMMENT '댓글 내용', 
+    `postId`           INT          NOT NULL    COMMENT '게시글 id', 
     `emoticonId`       INT          NULL        DEFAULT 0 COMMENT '이모티콘 id', 
     `userId`           INT          NULL        COMMENT '유저 id', 
     `createdAt`        TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
@@ -562,15 +565,61 @@ ALTER TABLE BandEnter COMMENT '밴드 조회 수';
 -- User Table Create SQL
 CREATE TABLE UserApplyingBand
 (
-    `bandId`       INT            NOT NULL    COMMENT '밴드 id', 
-    `userId`       INT            NOT NULL    COMMENT '유저 id', 
-    `applyStatus`  VARCHAR(45)    NULL        COMMENT '진행 상태', 
-    `createdAt`    TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`    TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
-    `isDeleted`    CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    `bandId`          INT            NOT NULL    COMMENT '밴드 id', 
+    `userId`          INT            NOT NULL    COMMENT '유저 id', 
+    `registerAnswer`  TEXT           NULL        COMMENT '가입 질문 응답', 
+    `applyStatus`     VARCHAR(45)    NULL        COMMENT '진행 상태', 
+    `createdAt`       TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`       TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`       CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
     PRIMARY KEY (bandId, userId)
 );
 
 ALTER TABLE UserApplyingBand COMMENT '밴드 가입 신청서';
+
+
+-- User Table Create SQL
+CREATE TABLE BandMemberRestrict
+(
+    `bandId`       INT          NOT NULL    COMMENT '밴드 id', 
+    `memberCount`  INT          NOT NULL    COMMENT '인원 수', 
+    `createdAt`    TIMESTAMP    NULL        DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`    TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`    CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    PRIMARY KEY (bandId)
+);
+
+ALTER TABLE BandMemberRestrict COMMENT '밴드 인원수 제한';
+
+
+-- User Table Create SQL
+CREATE TABLE BandMedia
+(
+    `mediaId`    INT          NOT NULL    AUTO_INCREMENT COMMENT '미디어 id', 
+    `bandId`     INT          NOT NULL    COMMENT '밴드 id', 
+    `mediaUrl`   TEXT         NULL        COMMENT '미디어 url', 
+    `createdAt`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`  TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`  CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    PRIMARY KEY (mediaId)
+);
+
+ALTER TABLE BandMedia COMMENT '밴드 소개 미디어';
+
+
+-- User Table Create SQL
+CREATE TABLE BandFile
+(
+    `fileId`           INT          NOT NULL    AUTO_INCREMENT COMMENT '파일 id', 
+    `bandId`           INT          NOT NULL    COMMENT '밴드 id', 
+    `fileUrl`          TEXT         NULL        COMMENT '파일 url', 
+    `fileDescription`  TEXT         NULL        COMMENT '파일 설명', 
+    `createdAt`        TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`        TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`        CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    PRIMARY KEY (fileId)
+);
+
+ALTER TABLE BandFile COMMENT '밴드 소개 파일';
 
 
