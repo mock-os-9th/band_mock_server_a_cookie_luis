@@ -26,6 +26,7 @@ CREATE TABLE Ads
 (
     `adsId`       INT          NOT NULL    AUTO_INCREMENT COMMENT '광고 id', 
     `adsMainImg`  TEXT         NULL        COMMENT '광고 대표 이미지 url', 
+    `adsUrl`      TEXT         NULL        COMMENT '광고 url', 
     `createdAt`   TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
     `updatedAt`   TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestampon update current_timestamp COMMENT '수정 시간', 
     `isDeleted`   CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
@@ -36,20 +37,6 @@ ALTER TABLE Ads COMMENT '광고';
 
 
 -- User Table Create SQL
-CREATE TABLE AdsImage
-(
-    `adsId`      INT            NOT NULL    COMMENT '광고 id', 
-    `adsSubImg`  VARCHAR(45)    NOT NULL    COMMENT '광고 이미지 url', 
-    `createdAt`  TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`  TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
-    `isDeleted`  CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
-    PRIMARY KEY (adsId, adsSubImg)
-);
-
-ALTER TABLE AdsImage COMMENT '광고 상세 이미지';
-
-
--- User Table Create SQL
 CREATE TABLE Band
 (
     `bandId`                  INT            NOT NULL    AUTO_INCREMENT COMMENT '밴드 id', 
@@ -57,14 +44,13 @@ CREATE TABLE Band
     `category`                VARCHAR(45)    NULL        DEFAULT '일반' COMMENT '카테고리', 
     `bandImg`                 VARCHAR(45)    NULL        COMMENT '대표 사진 url', 
     `isOpened`                CHAR(1)        NULL        DEFAULT 'Y' COMMENT '공개 유무', 
-    `existRegisterQustion`    CHAR(1)        NULL        DEFAULT 'N' COMMENT '가입 질문 유무', 
-    `registerQuestion`        TEXT           NULL        COMMENT '가입 질문', 
     `bandIntroduction`        TEXT           NULL        COMMENT '밴드 소개', 
     `isRegisterNoticed`       CHAR(1)        NULL        DEFAULT 'N' COMMENT '가입 알림 설정', 
     `isSecretAvailable`       CHAR(1)        NULL        DEFAULT 'N' COMMENT '비밀 댓글 가능', 
     `needRegisterPermission`  CHAR(1)        NULL        DEFAULT 'Y' COMMENT '가입 승인 유무', 
     `locationLatitude`        DOUBLE         NULL        COMMENT '위치 경도', 
     `locationLongitude`       DOUBLE         NULL        COMMENT '위치 위도', 
+    `color`                   VARCHAR(45)    NULL        COMMENT '색상', 
     `createdAt`               TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
     `updatedAt`               TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
     `isDeleted`               CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
@@ -523,7 +509,7 @@ ALTER TABLE BandPostView COMMENT '밴드 게시물 읽은 사람';
 -- User Table Create SQL
 CREATE TABLE UserHidePost
 (
-    `postId`     INT          NOT NULL    AUTO_INCREMENT COMMENT '게시글 id', 
+    `postId`     INT          NOT NULL    COMMENT '게시글 id', 
     `userId`     INT          NULL        COMMENT '유저 id', 
     `createdAt`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
     `updatedAt`  TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
@@ -621,5 +607,33 @@ CREATE TABLE BandFile
 );
 
 ALTER TABLE BandFile COMMENT '밴드 소개 파일';
+
+
+-- User Table Create SQL
+CREATE TABLE BandRegisterQuestion
+(
+    `bandId`            INT            NOT NULL    AUTO_INCREMENT COMMENT '밴드 id', 
+    `registerQuestion`  VARCHAR(45)    NOT NULL    COMMENT '가입 질문', 
+    `createdAt`         TIMESTAMP      NULL        DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`         TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`         CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    PRIMARY KEY (bandId)
+);
+
+
+-- User Table Create SQL
+CREATE TABLE UserNotice
+(
+    `userNoticeId`  INT            NOT NULL    AUTO_INCREMENT COMMENT '유저 알림 id', 
+    `userId`        INT            NULL        COMMENT '유저 id', 
+    `noticeType`    VARCHAR(45)    NULL        COMMENT '알림 타입', 
+    `noticeId`      INT            NULL        COMMENT '알림 id', 
+    `createdAt`     TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`     TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`     CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    PRIMARY KEY (userNoticeId)
+);
+
+ALTER TABLE UserNotice COMMENT '유저 알림';
 
 
