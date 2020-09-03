@@ -3,18 +3,18 @@
 -- User Table Create SQL
 CREATE TABLE User
 (
-    `userId`        INT             NOT NULL    AUTO_INCREMENT COMMENT '유저 id', 
-    `password`      VARCHAR(20))    NULL        COMMENT '비밀번호', 
-    `birthday`      DATE            NULL        COMMENT '생년월일', 
-    `gender`        CHAR(1)         NULL        COMMENT '성별', 
-    `phone`         VARCHAR(20)     NULL        COMMENT '연락처', 
-    `profileImg`    TEXT            NULL        COMMENT '프로필 이미지', 
-    `email`         VARCHAR(30)     NULL        COMMENT '이메일', 
-    `stateMessage`  VARCHAR(50)     NULL        COMMENT '상태 메시지', 
-    `name`          VARCHAR(10)     NULL        COMMENT '이름', 
-    `createdAt`     TIMESTAMP       NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`     TIMESTAMP       NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
-    `isDeleted`     CHAR(1)         NULL        DEFAULT 'N' COMMENT '삭제 유무', 
+    `userId`        INT            NOT NULL    AUTO_INCREMENT COMMENT '유저 id', 
+    `password`      VARCHAR(20)    NULL        COMMENT '비밀번호', 
+    `birthday`      DATE           NULL        COMMENT '생년월일', 
+    `gender`        CHAR(1)        NULL        COMMENT '성별', 
+    `phone`         VARCHAR(20)    NULL        COMMENT '연락처', 
+    `profileImg`    TEXT           NULL        COMMENT '프로필 이미지', 
+    `email`         VARCHAR(30)    NULL        COMMENT '이메일', 
+    `stateMessage`  VARCHAR(50)    NULL        COMMENT '상태 메시지', 
+    `name`          VARCHAR(10)    NULL        COMMENT '이름', 
+    `createdAt`     TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
+    `updatedAt`     TIMESTAMP      NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `isDeleted`     CHAR(1)        NULL        DEFAULT 'N' COMMENT '삭제 유무', 
     PRIMARY KEY (userId)
 );
 
@@ -28,7 +28,7 @@ CREATE TABLE Ads
     `adsMainImg`  TEXT         NULL        COMMENT '광고 대표 이미지 url', 
     `adsUrl`      TEXT         NULL        COMMENT '광고 url', 
     `createdAt`   TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 시간', 
-    `updatedAt`   TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp on update current_timestamp COMMENT '수정 시간', 
+    `updatedAt`   TIMESTAMP    NULL        DEFAULT current_timestamp on update current_timestamp COMMENT '수정 시간', 
     `isDeleted`   CHAR(1)      NULL        DEFAULT 'N' COMMENT '삭제 유무', 
     PRIMARY KEY (adsId)
 );
