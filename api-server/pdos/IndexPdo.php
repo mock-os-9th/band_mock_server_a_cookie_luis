@@ -21,51 +21,7 @@ order by rand() limit 1;";
     return $res[0];
 }
 
-function getUserBand($userId)
-{
-    $pdo = pdoSqlConnect();
-    $query = "select BandUser.bandId,
-       bandName,
-       bandImg
-from BandUser left join Band on
-BandUser.bandId = Band.bandId
-where BandUser.userId = ?;";
-
-    $st = $pdo->prepare($query);
-    //    $st->execute([$param,$param]);
-    $st->execute([$userId]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getBandInfo($bandId)
-{
-    $pdo = pdoSqlConnect();
-    $query = "select bandImg as 밴드대표사진,
-        bandName as 밴드이름,
-        isOpened as 공개여부,
-        count(userId) as 멤버수
-from BandUser left join Band on Band.bandId = BandUser.bandId
-where Band.bandId = ?;";
-
-    $st = $pdo->prepare($query);
-    //    $st->execute([$param,$param]);
-    $st->execute([$bandId]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getNaverUser($token)
+function getExistUserByNaver($token)
 {
     $token = str_replace(" ", "+", $token);
     $header = "Bearer ".$token; // Bearer 다음에 공백 추가
@@ -79,16 +35,9 @@ function getNaverUser($token)
     $headers[] = "Authorization: ".$header;
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $res = json_decode(curl_exec ($ch));
-
     $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $res->code = $status_code;
     curl_close ($ch);
-
-    if($status_code == 200){
-        return $res;
-    }
-    else{
-        echo "Error 내용:".json_encode($res);
-    }
 
     $st = null;
     $pdo = null;
@@ -96,53 +45,13 @@ function getNaverUser($token)
     return $res;
 }
 
-function naverRegister($token, $password, $phone, $birthday)
-{
-    $token = str_replace(" ", "+", $token);
-    $header = "Bearer ".$token; // Bearer 다음에 공백 추가
-    $url = "https://openapi.naver.com/v1/nid/me";
-    $is_post = false;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, $is_post);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $headers = array();
-    $headers[] = "Authorization: ".$header;
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    $res = json_decode(curl_exec ($ch));
-
-    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close ($ch);
-
-    if($status_code == 200){
-        $pdo = pdoSqlConnect();
-        $query = "insert into User (name, email, naverId, profileImg, password, gender, phone, birthday)
-    values (?, ?, ?, ?, ?, ?, ?, ?);";
-
-        $st = $pdo->prepare($query);
-        $st->execute([$res->response->name, $res->response->email, $res->response->id, $res->response->profile_image, $password, $res->response->gender, $phone, $birthday]);
-    }
-    else{
-        echo "Error 내용:".json_encode($res);
-    }
-
-    $st = null;
-    $pdo = null;
-
-    return $status_code;
-}
-
-function generalRegister($name, $email, $profileImg, $password, $gender, $phone, $birthday)
-{
+function getExistUserByPhone($phone){
     $pdo = pdoSqlConnect();
-    $query = "insert into User (name, email, profileImg, password, gender, phone, birthday)
-    values (?, ?, ?, ?, ?, ?, ?);";
+    $query = "SELECT phone, password, profileImg, name from User where phone = ?;";
     $st = $pdo->prepare($query);
-    $st->execute([$name, $email, $profileImg, $password, $gender, $phone, $birthday]);
-
-    $query = "SELECT last_insert_id();";
-    $st = $pdo->prepare($query);
-    $res = $st->execute();
+    $st->execute([$phone]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
 
     $st = null;
     $pdo = null;
@@ -150,68 +59,11 @@ function generalRegister($name, $email, $profileImg, $password, $gender, $phone,
     return $res[0];
 }
 
-function updateNaverId($userId, $token)
-{
-    $token = str_replace(" ", "+", $token);
-    $header = "Bearer ".$token; // Bearer 다음에 공백 추가
-    $url = "https://openapi.naver.com/v1/nid/me";
-    $is_post = false;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, $is_post);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $headers = array();
-    $headers[] = "Authorization: ".$header;
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    $res = json_decode(curl_exec ($ch));
-
-    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close ($ch);
-
-    if($status_code == 200){
-        $pdo = pdoSqlConnect();
-        $query = "update User set naverId = ? where userId = ?";
-
-        $st = $pdo->prepare($query);
-        $st->execute([$res->response->id, $userId]);
-    }
-    else{
-        echo "Error 내용:".json_encode($res);
-    }
-
-    $st = null;
-    $pdo = null;
-
-    return $status_code;
-}
-
-//READ
-function test()
-{
+function getExistUserByEmail($email){
     $pdo = pdoSqlConnect();
-    $query = "SELECT * FROM Test;";
-
+    $query = "SELECT email, password, profileImg, name from User where email = ?;";
     $st = $pdo->prepare($query);
-    //    $st->execute([$param,$param]);
-    $st->execute();
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-//READ
-function testDetail($testNo)
-{
-    $pdo = pdoSqlConnect();
-    $query = "SELECT * FROM Test WHERE no = ?;";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$testNo]);
-    //    $st->execute();
+    $st->execute([$email]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -222,19 +74,50 @@ function testDetail($testNo)
 }
 
 
-function testPost($name)
+function registerByNaver($token, $password, $phone, $birthday)
 {
-    $pdo = pdoSqlConnect();
-    $query = "INSERT INTO Test (name) VALUES (?);";
+    $token = str_replace(" ", "+", $token);
+    $header = "Bearer ".$token; // Bearer 다음에 공백 추가
+    $url = "https://openapi.naver.com/v1/nid/me";
+    $is_post = false;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, $is_post);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $headers = array();
+    $headers[] = "Authorization: ".$header;
+    //$response = curl_exec ($ch);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    $res = json_decode(curl_exec ($ch));
+    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close ($ch);
 
-    $st = $pdo->prepare($query);
-    $st->execute([$name]);
+    if($status_code == 200){
+        $pdo = pdoSqlConnect();
+        $query = "insert into User (name, profileImg, password, gender, phone, birthday)
+    values (?, ?, ?, ?, ?, ?);";
+
+        $st = $pdo->prepare($query);
+        $st->execute([$res->response->name, $res->response->profile_image, $password, $res->response->gender, $phone, $birthday]);
+    }
 
     $st = null;
     $pdo = null;
 
+    return $status_code;
 }
 
+function registerByGeneral($name, $email, $profileImg, $password, $phone, $birthday)
+{
+    $pdo = pdoSqlConnect();
+    $query = "insert into User (name, email, profileImg, password, phone, birthday)
+    values (?, ?, ?, ?, ?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$name, $email, $profileImg, $password, $phone, $birthday]);
+
+    $st = null;
+    $pdo = null;
+}
 
 function isValidUser($id, $pw){
     $pdo = pdoSqlConnect();
@@ -253,14 +136,23 @@ function isValidUser($id, $pw){
 
 }
 
-function isAlreadyExistUser($phone){
+function isExistPhone($phone){
     $pdo = pdoSqlConnect();
-    $query = "SELECT User.userId as userId,
-       exist
-FROM User left join (SELECT userId, EXISTS(SELECT * FROM User as US WHERE User.userId = US.userId ) AS exist from User) as EU
-on User.userId = EU.userId
-where User.phone = ?;";
+    $query = "SELECT exists(select userId from User where phone = ?) as exist;";
 
+    $st = $pdo->prepare($query);
+    $st->execute([$phone]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st=null;$pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isExistEmail($phone){
+    $pdo = pdoSqlConnect();
+    $query = "SELECT exists(select userId from User where email = ?) as exist;";
 
     $st = $pdo->prepare($query);
     $st->execute([$phone]);
@@ -308,7 +200,75 @@ function isValidUsersId($id)
 
 }
 
+function isValidEmailUser($email, $password)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM User WHERE email = ? and password = ?) AS exist;";
 
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$email, $password]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+
+}
+
+function getIdFromEmailPw($email, $password)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT userId FROM User WHERE email = ? and password = ?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$email, $password]);
+    //    $st->execute();
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["userId"]);
+}
+
+function isValidPhoneUser($phone, $password)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM User WHERE phone = ? and password = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$phone, $password]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function getIdFromPhonePw($phone, $password)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT userId FROM User WHERE phone = ? and password = ?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$phone, $password]);
+    //    $st->execute();
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["userId"]);
+}
 // CREATE
 //    function addMaintenance($message){
 //        $pdo = pdoSqlConnect();

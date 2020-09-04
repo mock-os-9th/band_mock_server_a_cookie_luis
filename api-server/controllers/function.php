@@ -7,6 +7,13 @@ use Google\Auth\ApplicationDefaultCredentials;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 
+const passwordReg = "/^[0-9A-Za-z]{8,16}$/",
+emailReg = "/^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/",
+phoneReg = "/^01([016789]?)-?([0-9]{3,4})-?([0-9]{4})$/",
+birthdayReg = "/^(19|20)\d{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$/",
+enterpriseReg = "/^[0-9]{3}-[0-9]{2}-[0-9]{5}$/",
+communicationSaleReg = "/^[0-9]{4}-[가-힣]{4}-[0-9]{5}$/";
+
 function getSQLErrorException($errorLogs, $e, $req)
 {
     $res = (Object)Array();
@@ -21,8 +28,13 @@ function isValidHeader($jwt, $key)
 {
     try {
         $data = getDataByJWToken($jwt, $key);
+        if(!empty($data->email)){ //email이 유효한지 검사
+            return isValidEmailUser($data->email, $data->password);
+        }
+        else if(!empty($data->phone)){ //phone번호가 유효한지 검사
+            return isValidPhoneUser($data->phone, $data->password);
+        }
         //로그인 함수 직접 구현 요함
-        return isValidUser($data->id, $data->pw);
     } catch (\Exception $e) {
         return false;
     }
@@ -74,12 +86,14 @@ function getTodayByTimeStamp()
     return date("Y-m-d H:i:s");
 }
 
-function getJWToken($id, $pw, $secretKey)
+function getJWToken($userId, $email, $phone, $password, $secretKey)
 {
     $data = array(
         'date' => (string)getTodayByTimeStamp(),
-        'id' => (string)$id,
-        'pw' => (string)$pw
+        'userId' => (int)$userId,
+        'email' => (string)$email,
+        'phone' => (string)$phone,
+        'password' => (string)$password
     );
 
 //    echo json_encode($data);
