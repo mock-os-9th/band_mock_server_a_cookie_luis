@@ -1,2 +1,2 @@
-DatabasePdo.php
-/api-server/logs
+*.log
+api-server/pdos/DatabasePdo.php
