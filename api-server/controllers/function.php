@@ -28,11 +28,15 @@ function isValidHeader($jwt, $key)
 {
     try {
         $data = getDataByJWToken($jwt, $key);
-        if(!empty($data->email)){ //email이 유효한지 검사
-            return isValidEmailUser($data->email, $data->password);
+        if(!empty($data->naverId)){
+            return isValidNaverUser($data->naverId);
         }
-        else if(!empty($data->phone)){ //phone번호가 유효한지 검사
-            return isValidPhoneUser($data->phone, $data->password);
+        else {
+            if (!empty($data->email)) { //email이 유효한지 검사
+                return isValidEmailUser($data->email, $data->password);
+            } else if (!empty($data->phone)) { //phone번호가 유효한지 검사
+                return isValidPhoneUser($data->phone, $data->password);
+            }
         }
         //로그인 함수 직접 구현 요함
     } catch (\Exception $e) {
@@ -86,11 +90,12 @@ function getTodayByTimeStamp()
     return date("Y-m-d H:i:s");
 }
 
-function getJWToken($userId, $email, $phone, $password, $secretKey)
+function getJWToken($userId, $naverId, $email, $phone, $password, $secretKey)
 {
     $data = array(
         'date' => (string)getTodayByTimeStamp(),
         'userId' => (int)$userId,
+        'naverId' => (int)$naverId,
         'email' => (string)$email,
         'phone' => (string)$phone,
         'password' => (string)$password

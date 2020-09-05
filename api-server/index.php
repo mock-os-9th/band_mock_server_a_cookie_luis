@@ -14,12 +14,13 @@ date_default_timezone_set('Asia/Seoul');
 ini_set('default_charset', 'utf8mb4');
 
 //에러출력하게 하는 코드
-error_reporting(E_ALL); ini_set("display_errors", 1);
+//error_reporting(E_ALL); ini_set("display_errors", 1);
 
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     // UserController
     $r->addRoute('GET', '/users', ['UserController', 'getExistUserInfo']);
     $r->addRoute('POST', '/users', ['UserController', 'createUser']);
+    $r->addRoute('GET', '/users/info', ['UserController', 'getNaverUserInfo']);
     //$r->addRoute('POST', '/posts', ['SocialController', 'createPost']);
     $r->addRoute('PATCH', '/users/{userid}', ['UserController', 'updateUser']);
     $r->addRoute('GET', '/autologin', ['MainController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
@@ -34,7 +35,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/band/{bandid}', ['BandController', 'getBandDetail']); //09.04 밴드 상세 정보 조회 만듬(기성).
     $r->addRoute('POST', '/enterpriseBand/{bandid}', ['BandController', 'createEnterpriseBand']); //09.04 사업자 밴드 생성 만듬(기성).
     $r->addRoute('PATCH', '/bandIntroduction/{bandid}', ['BandController', 'updateBandIntroduction']); //09.04 밴드 소개 수정 만듬(기성).
-    $r->addRoute('POST', '/bandEnter', ['BandController', 'createBand']); //09.03 band 생성 만듬(기성).
+    $r->addRoute('POST', '/bandEnter/{bandid}', ['BandController', 'createBandEnter']); //09.05 band 접속 유저 생성 만듬(기성).
 
     // SocialController
     //$r->addRoute('POST', '/band', ['SocialController', 'createPost']);

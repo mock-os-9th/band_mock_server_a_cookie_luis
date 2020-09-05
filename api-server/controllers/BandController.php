@@ -26,7 +26,13 @@ try {
                 return;
             }
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
-            $res->result = getUserBand($data->userId);
+            $result = getUserBand($data->userId);
+            if($result == null){
+                $res->result = null;
+            }
+            else {
+                $res->result = $result;
+            }
             $res->isSuccess = TRUE;
             $res->code = 100;
             $res->message = "유저가 가입한 밴드 조회 성공";
@@ -206,13 +212,13 @@ try {
                 return;
             }
 
-            /*if (!preg_match(communicationSaleReg, $req->saleRegisterNo)) {
+            if (!preg_match(communicationSaleReg, $req->saleRegisterNo)) {
                 $res->isSuccess = FALSE;
                 $res->code = 204;
                 $res->message = "형식에 맞지 않는 통신판매 신고번호";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
-            }*/
+            }
 
             $res->result = createEnterpriseBand($bandId, $req->companyName, $req->headName, $req->address, $req->phone, $req->email, $req->companyRegisterNo, $req->saleRegisterNo);
             $res->isSuccess = TRUE;
@@ -259,6 +265,37 @@ try {
             $res->isSuccess = TRUE;
             $res->code = 100;
             $res->message = "밴드 소개 변경 성공";
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "createBandEnter":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $bandId = $vars['bandid'];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res->isSuccess = FALSE;
+                $res->code = 200;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!isValidBandID($bandId)) {
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "존재 하지 않는 밴드 id 입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = createBandEnter($bandId);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "밴드 검색 성공";
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;

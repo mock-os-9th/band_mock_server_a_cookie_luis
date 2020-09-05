@@ -191,6 +191,18 @@ where bandId = ?;";
 
 }
 
+function createBandEnter($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "insert into BandEnter (bandId) values (?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId]);
+
+    $st = null;
+    $pdo = null;
+
+}
+
 function isValidBandUserLeaderID($bandId, $userId)
 {
     $pdo = pdoSqlConnect();
