@@ -2,6 +2,9 @@
 require './pdos/BandPdo.php';
 require './pdos/DatabasePdo.php';
 require './pdos/IndexPdo.php';
+require './pdos/UserPdo.php';
+require './pdos/SocialPdo.php';
+
 require './vendor/autoload.php';
 
 use \Monolog\Logger as Logger;
@@ -17,6 +20,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // UserController
     $r->addRoute('GET', '/users', ['UserController', 'getExistUserInfo']);
     $r->addRoute('POST', '/users', ['UserController', 'createUser']);
+    //$r->addRoute('POST', '/posts', ['SocialController', 'createPost']);
     $r->addRoute('PATCH', '/users/{userid}', ['UserController', 'updateUser']);
     $r->addRoute('GET', '/autologin', ['MainController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
     $r->addRoute('GET', '/jwt', ['UserController', 'validateJwt']); //09.03 jwt 유효성 검사 만듬(기성).
@@ -30,6 +34,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/band/{bandid}', ['BandController', 'getBandDetail']); //09.04 밴드 상세 정보 조회 만듬(기성).
     $r->addRoute('POST', '/enterpriseBand/{bandid}', ['BandController', 'createEnterpriseBand']); //09.04 사업자 밴드 생성 만듬(기성).
     $r->addRoute('PATCH', '/bandIntroduction/{bandid}', ['BandController', 'updateBandIntroduction']); //09.04 밴드 소개 수정 만듬(기성).
+    $r->addRoute('POST', '/bandEnter', ['BandController', 'createBand']); //09.03 band 생성 만듬(기성).
 
     // SocialController
     //$r->addRoute('POST', '/band', ['SocialController', 'createPost']);

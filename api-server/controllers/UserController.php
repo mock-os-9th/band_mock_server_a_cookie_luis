@@ -21,6 +21,7 @@ try {
                     $res->code = 100;
                     $res->message = "프로필 조회 성공";
                     echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
                 }
                 else{
                     http_response_code(200);
@@ -28,6 +29,7 @@ try {
                     $res->code = 206;
                     $res->message = "네이버 로그인 실패";
                     echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
                 }
             }
             // 전화번호로 가입할 경우
@@ -64,7 +66,7 @@ try {
                 $res->code = 100;
                 $res->message = "프로필 조회 성공";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
-
+                return;
             }
             // 이메일로 가입할 경우
             else if(!empty($_GET['email'])){
@@ -100,6 +102,7 @@ try {
                 $res->code = 100;
                 $res->message = "프로필 조회 성공";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
             }
             // Query String이 존재하지 않을 경우
             else{
@@ -195,14 +198,21 @@ try {
                 }
                 // 이미 가입된 전화번호 검사
                 if(isExistPhone($req->phone)) {
+                    if(isValidPhoneUser($req->phone, $req->password)){
+                        $res->code = 208;
+                        $res->message = "이미 존재하는 전화번호, 일치하는 비밀번호";
+                    }
+                    else{
+                        $res->code = 209;
+                        $res->message = "이미 존재하는 전화번호, 일치하지 않는 비밀번호";
+                    }
                     http_response_code(200);
                     $res->isSuccess = FALSE;
-                    $res->code = 208;
-                    $res->message = "이미 존재하는 전화번호";
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;
                 }
-                $res->code = registerByNaver($_GET['naver'], $req->password, $req->phone, $req->birthday);
+
+                $res->code = registerByNaver($_GET['naver'], password_hash($req->password, PASSWORD_DEFAULT), $req->phone, $req->birthday);
                 if($res->code != 200){
                     http_response_code(200);
                     $res->isSuccess = FALSE;
@@ -264,10 +274,16 @@ try {
                     }
                     // 이미 가입된 전화번호 검사
                     if(isExistPhone($req->phone)) {
+                        if(isValidPhoneUser($req->phone, $req->password)){
+                            $res->code = 208;
+                            $res->message = "이미 존재하는 전화번호, 일치하는 비밀번호";
+                        }
+                        else{
+                            $res->code = 209;
+                            $res->message = "이미 존재하는 전화번호, 일치하지 않는 비밀번호";
+                        }
                         http_response_code(200);
                         $res->isSuccess = FALSE;
-                        $res->code = 208;
-                        $res->message = "이미 존재하는 전화번호";
                         echo json_encode($res, JSON_NUMERIC_CHECK);
                         return;
                     }
@@ -294,23 +310,29 @@ try {
                     }
                     // 이미 가입된 이메일 검사
                     if(isExistEmail($req->email)) {
+                        if(isValidEmailUser($req->phone, $req->password)){
+                            $res->code = 210;
+                            $res->message = "이미 존재하는 이메일, 일치하는 비밀번호";
+                        }
+                        else{
+                            $res->code = 211;
+                            $res->message = "이미 존재하는 이메일, 일치하지 않는 비밀번호";
+                        }
                         http_response_code(200);
                         $res->isSuccess = FALSE;
-                        $res->code = 209;
-                        $res->message = "이미 존재하는 이메일";
                         echo json_encode($res, JSON_NUMERIC_CHECK);
                         return;
                     }
                     $req->phone = null;
                 }
-                $res->code = registerByGeneral($req->name, $req->email, $req->profileImg, $req->password, $req->phone, $req->birthday);
+                $res->code = registerByGeneral($req->name, $req->email, $req->profileImg, password_hash($req->password, PASSWORD_DEFAULT), $req->phone, $req->birthday);
             }
             http_response_code(200);
             $res->isSuccess = TRUE;
             $res->code = 100;
             $res->message = "회원가입 성공";
             echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
+            return;
 
         case "validateJwt":
             // jwt 유효성 검사
@@ -333,7 +355,7 @@ try {
             $res->message = "로그인 성공.";
 
             echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
+            return;
         /*
          * API No. 1
          * API Name : JWT 생성 테스트 API (로그인)
@@ -357,7 +379,7 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;
                 }
-                $userId = getIdFromEmailPw($req->email, $req->password);
+                $userId = getIdFromEmailPw($req->email);
             }
             else if(!empty($req->phone)){ //핸드폰 번호로 로그인 하는 경우
                 if (!isValidPhoneUser($req->phone, $req->password)) {
@@ -367,7 +389,7 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;
                 }
-                $userId = getIdFromPhonePw($req->phone, $req->password);
+                $userId = getIdFromPhonePw($req->phone);
             }
 
             $jwt = getJWToken($userId, $req->email, $req->phone, $req->password, JWT_SECRET_KEY);
