@@ -88,7 +88,6 @@ function registerByNaver($token, $password, $phone, $birthday)
 
 function registerByGeneral($name, $email, $profileImg, $password, $phone, $birthday)
 {
-    echo $password;
     $pdo = pdoSqlConnect();
     $query = "insert into User (name, email, profileImg, password, phone, birthday)
     values (?, ?, ?, ?, ?, ?);";
