@@ -227,6 +227,16 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;
                 }
+                // 네이버 아이디가 이미 존재하는지 검사
+                if(!isValidNaverUser($req->naverId)){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 214;
+                    $res->message = "이미 존재하는 네이버 id입니다.";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+
                 // 성별 형식 검사
                 if($req->gender != 'F' && $req->gender != 'M'){
                     $res->isSuccess = FALSE;
@@ -364,12 +374,11 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
+
             http_response_code(200);
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY); //jwt가 제대로 파싱되는지 확인하기 위해 만든 부분 원래는 유효성 검사만분 진행
             $res->result = $data;
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "로그인 성공.";
+            $res = returnMake($res, TRUE, 100, "로그인 성공.");
 
             echo json_encode($res, JSON_NUMERIC_CHECK);
             return;
@@ -380,27 +389,25 @@ try {
          */
         case "createJwt":
             // jwt 유효성 검사
-            http_response_code(200);
             $userId = 0;
             $naverId = 0;
             $phone = 0;
+
             if(empty($req->token) && empty($req->phone) && empty($req->email)){
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "네이버 엑세스 토큰, 핸드폰 번호, 이메일 주소가 없습니다.";
+                $res = returnMake($res, FALSE, 200, "네이버 엑세스 토큰, 핸드폰 번호, 이메일 주소가 없습니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
             else{
                 if(!empty($req->token)){
                     if(!is_string($req->token)){
-                        $res->isSuccess = FALSE;
-                        $res->code = 204;
-                        $res->message = "형식에 맞지 않는 입력입니다.";
+                        $res = returnMake($res, FALSE, 204, "네이버 토큰이 문자열이 아닙니다.");
                         echo json_encode($res, JSON_NUMERIC_CHECK);
                         return;
                     }
+
                     $statusCode = isValidToken($req->token);
+
                     if($statusCode == 200){
                         $naverId = getNaverId($req->token);
                         $result = getUserIdPhoneFromNaverId($naverId);
@@ -408,9 +415,7 @@ try {
                         $phone = $result["phone"];
                     }
                     else{
-                        $res->isSuccess = FALSE;
-                        $res->code = 200;
-                        $res->message = "유효하지 않은 토큰입니다.";
+                        $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                         echo json_encode($res, JSON_NUMERIC_CHECK);
                         return;
                     }
@@ -418,57 +423,51 @@ try {
                 else {
                     if (!empty($req->email)) { //이메일로 로그인하는 경우
                         if(!is_string($req->email)){
-                            $res->isSuccess = FALSE;
-                            $res->code = 204;
-                            $res->message = "형식에 맞지 않는 입력입니다.";
+                            $res = returnMake($res, FALSE, 205, "이메일이 문자열이 아닙니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         if(!is_string($req->password)){
-                            $res->isSuccess = FALSE;
-                            $res->code = 204;
-                            $res->message = "형식에 맞지 않는 입력입니다.";
+                            $res = returnMake($res, FALSE, 206, "비밀번호가 문자열이 아닙니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         if (!isValidEmailUser($req->email, $req->password)) {
-                            $res->isSuccess = FALSE;
-                            $res->code = 201;
-                            $res->message = "유효하지 않은 이메일, 패스워드 입니다.";
+                            $res = returnMake($res, FALSE, 201, "유효하지 않은 이메일, 패스워드 입니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         $userId = getIdFromEmailPw($req->email);
                         $phone = $req->phone;
-                    } else if (!empty($req->phone)) { //핸드폰 번호로 로그인 하는 경우
+                    }
+                    else if (!empty($req->phone)) { //핸드폰 번호로 로그인 하는 경우
                         if(!is_string($req->phone)){
-                            $res->isSuccess = FALSE;
-                            $res->code = 204;
-                            $res->message = "형식에 맞지 않는 입력입니다.";
+                            $res = returnMake($res, FALSE, 207, "전화번호가 문자열이 아닙니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         if(!is_string($req->password)){
-                            $res->isSuccess = FALSE;
-                            $res->code = 204;
-                            $res->message = "형식에 맞지 않는 입력입니다.";
+                            $res = returnMake($res, FALSE, 206, "비밀번호가 문자열이 아닙니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         if (!preg_match(passwordReg, $req->password)) {
-                            $res->isSuccess = FALSE;
-                            $res->code = 202;
-                            $res->message = "패스워드는 특수문자 제외 영어 대소문자, 숫자 포함 8~16자 입니다.";
+                            $res = returnMake($res, FALSE, 202, "패스워드는 특수문자 제외 영어 대소문자, 숫자 포함 8~16자 입니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         if (!isValidPhoneUser($req->phone, $req->password)) {
-                            $res->isSuccess = FALSE;
-                            $res->code = 203;
-                            $res->message = "유효하지 않은 핸드폰번호, 패스워드 입니다.";
+                            $res = returnMake($res, FALSE, 203, "유효하지 않은 핸드폰번호, 패스워드 입니다.");
                             echo json_encode($res, JSON_NUMERIC_CHECK);
                             return;
                         }
+
                         $userId = getIdFromPhonePw($req->phone);
                         $phone = $req->phone;
                     }
@@ -477,9 +476,8 @@ try {
 
             $jwt = getJWToken($userId, $naverId, $req->email, $phone, $req->password, JWT_SECRET_KEY);
             $res->result->jwt = $jwt;
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "유저 로그인 성공.";
+            $res = returnMake($res, TRUE, 100, "유저 로그인 성공.");
+            http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
@@ -495,6 +493,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
+
             http_response_code(200);
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY); //jwt가 제대로 파싱되는지 확인하기 위해 만든 부분 원래는 유효성 검사만분 진행
             $res->isSuccess = TRUE;

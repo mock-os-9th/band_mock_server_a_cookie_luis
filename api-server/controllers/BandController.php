@@ -18,33 +18,22 @@ try {
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
+
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
             $result = getUserBand($data->userId);
+
             if($result == null){
                 $res->result = null;
             }
             else {
                 $res->result = $result;
             }
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "유저가 가입한 밴드 조회 성공";
-            http_response_code(200);
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
-
-        case "getBandInfo":
-            $res->result = getBandInfo($vars['bandid']);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "밴드 정보 조회 성공";
+            $res = returnMake($res, TRUE, 100, "유저가 가입한 밴드 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
@@ -53,22 +42,35 @@ try {
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if(!is_string($req->bandName)){
+                $res = returnMake($res, FALSE, 201, "밴드 이름이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            if(!is_string($req->bandImg)){
+                $res = returnMake($res, FALSE, 202, "밴드 이미지가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            if(!is_string($req->isOpened)){
+                $res = returnMake($res, FALSE, 203, "밴드 공개타입이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
             $bandId = createBand($req->bandName, $req->bandImg, $req->isOpened);
             $sinceLeaderDate = createFirstBandUser($bandId, $data->userId);
+
             $res->result->bandId = $bandId;
             $res->result->bandName = $req->bandName;
             $res->result->sinceLeaderDate = $sinceLeaderDate;
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "유저가 가입한 밴드 조회 성공";
+            $res = returnMake($res, TRUE, 100, "유저가 가입한 밴드 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
@@ -78,50 +80,39 @@ try {
             $bandId = $vars['bandid'];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
-
+            
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
             if (!isValidBandID($bandId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "존재 하지 않는 밴드 id 입니다.";
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
             if (!isValidBandUserLeaderID($bandId, $data->userId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 202;
-                $res->message = "밴드 리더가 아닙니다.";
+                $res = returnMake($res, FALSE, 202, "밴드 리더가 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
             $res->result = getBandDetail($bandId);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "밴드 상세 조회 성공";
+            $res = returnMake($res, TRUE, 100, "밴드 상세 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
         case "updateBandProfile":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = $vars['bandid'];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
@@ -129,56 +120,83 @@ try {
 
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
-            if (!isValidBandID($bandId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "존재 하지 않는 밴드 id 입니다.";
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 204, "형");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            $original = getOriginalProfile($bandId);
+            $original = getOriginalProfile($req->bandId);
 
-            if (!isValidBandUserLeaderID($bandId, $data->userId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 202;
-                $res->message = "밴드 리더가 아닙니다.";
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 202, "밴드 리더가 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
+            }
+
+            if(!empty($req->bandName)) {
+                if (!is_string($req->bandName)) {
+                    $res = returnMake($res, FALSE, 203, "밴드 이름이 문자열이 아닙니다.");
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+
+            }
+
+            if(!empty($req->bandImg)) {
+                if (!is_string($req->bandImg)) {
+                    $res = returnMake($res, FALSE, 204, "밴드 이미지가 문자열이 아닙니다.");
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+            }
+
+            if(!empty($req->color)) {
+                if (!is_string($req->color)) {
+                    $res = returnMake($res, FALSE, 205, "밴드 색상이 문자열이 아닙니다.");
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
             }
 
             if ($req->bandName == "") {
                 $bandName = $original[0]["bandName"];
-            } else {
+            }
+            else {
                 $bandName = $req->bandName;
             }
             if ($req->bandImg == "") {
                 $bandImg = $original[0]["bandImg"];
-            } else {
+            }
+            else {
                 $bandImg = $req->bandImg;
             }
             if ($req->color == "") {
                 $color = $original[0]["color"];
-            } else {
+            }
+            else {
                 $color = $req->color;
             }
-            $res->result = updateBandProfile($bandId, $bandName, $bandImg, $color);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "밴드 프로필 변경 성공";
+
+            $res->result = updateBandProfile($req->bandId, $bandName, $bandImg, $color);
+            $res = returnMake($res, TRUE, 100, "밴드 프로필 변경 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
         case "createEnterpriseBand":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = $vars['bandid'];
+
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
@@ -186,96 +204,135 @@ try {
 
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
-            if (!isValidBandID($bandId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "존재 하지 않는 밴드 id 입니다.";
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 212, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            if (!isValidBandUserLeaderID($bandId, $data->userId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 202;
-                $res->message = "밴드 리더가 아닙니다.";
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 202, "밴드 리더가 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_string($req->companyName)) {
+                $res = returnMake($res, FALSE, 205, "상호명이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->headName)) {
+                $res = returnMake($res, FALSE, 206, "대표자 성명이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->address)) {
+                $res = returnMake($res, FALSE, 207, "주소가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->phone)) {
+                $res = returnMake($res, FALSE, 208, "전화번호가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->email)) {
+                $res = returnMake($res, FALSE, 209, "메일이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->companyRegisterNo)) {
+                $res = returnMake($res, FALSE, 210, "사업자 등록 번호가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_string($req->saleRegisterNo)) {
+                $res = returnMake($res, FALSE, 211, "통신판매 신고번호가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
 
             if (!preg_match(enterpriseReg, $req->companyRegisterNo)) {
-                $res->isSuccess = FALSE;
-                $res->code = 203;
-                $res->message = "형식에 맞지 않는 사업자 등록 번호";
+                $res = returnMake($res, FALSE, 203, "형식에 맞지 않는 사업자 등록 번호.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
 
-            if (!preg_match(communicationSaleReg, $req->saleRegisterNo)) {
-                $res->isSuccess = FALSE;
-                $res->code = 204;
-                $res->message = "형식에 맞지 않는 통신판매 신고번호";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                return;
-            }
+//            if (!preg_match(communicationSaleReg, $req->saleRegisterNo)) {
+//                $res = returnMake($res, FALSE, 204, "형식에 맞지 않는 통신판매 신고번호.");
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                return;
+//            }
 
-            $res->result = createEnterpriseBand($bandId, $req->companyName, $req->headName, $req->address, $req->phone, $req->email, $req->companyRegisterNo, $req->saleRegisterNo);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "사업자 밴드 생성 성공";
+            $res->result = createEnterpriseBand($req->bandId, $req->companyName, $req->headName, $req->address, $req->phone, $req->email, $req->companyRegisterNo, $req->saleRegisterNo);
+            $res = returnMake($res, TRUE, 100, "사업자 밴드 생성 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
         case "updateBandIntroduction":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = $vars['bandid'];
+
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
-            $original = getOriginalProfile($bandId);
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            if (!isValidBandID($bandId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "존재 하지 않는 밴드 id 입니다.";
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 204, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            if (!isValidBandUserLeaderID($bandId, $data->userId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 202;
-                $res->message = "밴드 리더가 아닙니다.";
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 202, "밴드 리더가 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            $res->result = updateBandIntroduction($bandId, $req->bandIntroduction);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "밴드 소개 변경 성공";
+            if (!is_string($req->bandIntroduction)) {
+                $res = returnMake($res, FALSE, 203, "밴드 소개가 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            $res->result = updateBandIntroduction($req->bandId, $req->bandIntroduction);
+            $res = returnMake($res, TRUE, 100, "밴드 소개 변경 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
         case "createBandEnter":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = $vars['bandid'];
+
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
-                $res->isSuccess = FALSE;
-                $res->code = 200;
-                $res->message = "유효하지 않은 토큰입니다.";
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
@@ -283,19 +340,188 @@ try {
 
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
-            if (!isValidBandID($bandId)) {
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "존재 하지 않는 밴드 id 입니다.";
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
 
-            $res->result = createBandEnter($bandId);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "밴드 검색 성공";
+            $res->result = createBandEnter($req->bandId);
+            $res = returnMake($res, TRUE, 100, "밴드 들어가기 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "updateBandMember":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->restrictMemberNo)) {
+                $res = returnMake($res, FALSE, 204, "밴드 인원수 제한이 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidChangeMemberNo($req->bandId)) {
+                $res = returnMake($res, FALSE, 205, "멤버수 설정은 하루에 한번만 변경할 수 있습니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = updateBandMember($req->bandId, $req->restrictMemberNo);
+            $res = returnMake($res, TRUE, 100, "밴드 멤버수 변경 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "createBandRestrictAge":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (isAlreadyExistBandIdAge($req->bandId)) {
+                $res = returnMake($res, FALSE, 204, "이미 나이 제한이 존재합니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->minAge)) {
+                $res = returnMake($res, FALSE, 205, "최소나이가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!is_int($req->maxAge)) {
+                $res = returnMake($res, FALSE, 206, "최대나이가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidRestrictAge($req->minAge, $req->maxAge)) {
+                $res = returnMake($res, FALSE, 207, "최소 나이가 최대 나이보다 큽니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = createBandRestrictAge($req->bandId, $req->minAge, $req->maxAge);
+            $res = returnMake($res, TRUE, 100, "밴드 나이 제한 설정 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "createBandRestrictGender":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (isAlreadyExistBandIdGender($req->bandId)) {
+                $res = returnMake($res, FALSE, 203, "이미 성별 제한이 존재합니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 204, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_string($req->gender)) {
+                $res = returnMake($res, FALSE, 205, "성별이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidRestrictGender($req->gender)) {
+                $res = returnMake($res, FALSE, 206, "성별이 F 또는 M이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = createBandRestrictGender($req->bandId, $req->gender);
+            $res = returnMake($res, TRUE, 100, "밴드 성별 제한 설정 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
