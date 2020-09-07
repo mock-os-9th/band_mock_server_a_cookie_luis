@@ -190,6 +190,24 @@ function getIdFromPhonePw($phone)
     $pdo = null;
     return intval($res[0]["userId"]);
 }
+
+function isValidBandId($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
 // CREATE
 //    function addMaintenance($message){
 //        $pdo = pdoSqlConnect();

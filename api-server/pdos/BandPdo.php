@@ -242,6 +242,55 @@ function createBandRestrictGender($bandId, $gender)
 
 }
 
+function getBandTag($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select tagContent
+from BandTag
+where bandId = ?;";
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function createBandTag($bandId, $tagContent)
+{
+    $pdo = pdoSqlConnect();
+    $query = "insert into BandTag (bandId, tagContent) values (?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $tagContent]);
+
+    $st = null;
+    $pdo = null;
+
+}
+
+function isValidBandUser($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
 function isValidBandUserLeaderID($bandId, $userId)
 {
     $pdo = pdoSqlConnect();
@@ -260,23 +309,6 @@ function isValidBandUserLeaderID($bandId, $userId)
 
 }
 
-function isValidBandId($id)
-{
-    $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ?) AS exist;";
-
-
-    $st = $pdo->prepare($query);
-    //    $st->execute([$param,$param]);
-    $st->execute([$id]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-    return intval($res[0]["exist"]);
-
-}
 
 function isValidChangeMemberNo($bandId)
 {
@@ -359,6 +391,24 @@ function isAlreadyExistBandIdGender($bandId)
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
     $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isAlreadyExistBandTag($bandId, $tagContent)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandTag WHERE bandId = ? and tagContent = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId, $tagContent]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 

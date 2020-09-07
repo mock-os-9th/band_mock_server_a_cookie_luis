@@ -31,7 +31,7 @@ try {
                 $res->result = null;
             }
             else {
-                $res->result = $result;
+                    $res->result->bandInfo = $result;
             }
             $res = returnMake($res, TRUE, 100, "유저가 가입한 밴드 조회 성공.");
             http_response_code(200);
@@ -525,6 +525,105 @@ try {
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
+
+        case "getBandTag":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $bandId = intval($vars['bandid']);
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUser($bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 유저가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $result = getBandTag($bandId);
+
+            if($result == null){
+                $res->result = null;
+            }
+            else {
+                $res->result->bandTag = $result;
+            }
+
+            $res = returnMake($res, TRUE, 100, "밴드 태그 조회 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "createBandTag":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_string($req->tagContent)) {
+                $res = returnMake($res, FALSE, 204, "태그 내용이 문자열이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            $tagContent = str_replace(" ", "", $req->tagContent);
+            if (isAlreadyExistBandTag($req->bandId, $tagContent)) {
+                $res = returnMake($res, FALSE, 205, "이미 똑같은 태그가 존재합니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = createBandTag($req->bandId, $tagContent);
+            $res = returnMake($res, TRUE, 100, "밴드 태그 생성 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+            
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);

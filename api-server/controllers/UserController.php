@@ -232,7 +232,7 @@ try {
                     http_response_code(200);
                     $res->isSuccess = FALSE;
                     $res->code = 214;
-                    $res->message = "이미 존재하는 네이버 id입니다.";
+                    $res->message = "이미 존재하는 네이버 id";
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;
                 }
@@ -287,7 +287,7 @@ try {
                 if(!is_string($req->phone)){
                     http_response_code(200);
                     $res->isSuccess = FALSE;
-                    $res->code = 204;
+                    $res->code = 205;
                     $res->message = "형식에 맞지 않은 입력";
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     return;

@@ -21,8 +21,6 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users', ['UserController', 'getExistUserInfo']);
     $r->addRoute('POST', '/users', ['UserController', 'createUser']);
     $r->addRoute('GET', '/users/info', ['UserController', 'getNaverUserInfo']);
-    //$r->addRoute('POST', '/posts', ['SocialController', 'createPost']);
-    $r->addRoute('PATCH', '/users/{userid}', ['UserController', 'updateUser']);
     $r->addRoute('GET', '/autologin', ['MainController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
     $r->addRoute('GET', '/jwt', ['UserController', 'validateJwt']); //09.03 jwt 유효성 검사 만듬(기성).
     $r->addRoute('POST', '/jwt', ['UserController', 'createJwt']); //09.03 jwt 생성 만듬(기성).
@@ -39,9 +37,12 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('PATCH', '/bandMember', ['BandController', 'updateBandMember']); //09.06 밴드 인원수 수정 만듬(기성).
     $r->addRoute('POST', '/bandRestrictAge', ['BandController', 'createBandRestrictAge']); //09.06 밴드 나이 제한 생성 만듬(기성).
     $r->addRoute('POST', '/bandRestrictGender', ['BandController', 'createBandRestrictGender']); //09.06 밴드 성성 제한 생성 만듬(기성).
-
+    $r->addRoute('GET', '/bandTag/{bandid}', ['BandController', 'getBandTag']); //09.07 밴드 태그 조회 만듬(기성).
+    $r->addRoute('POST', '/bandTag', ['BandController', 'createBandTag']); //09.07 밴드 태그 생성 만듬(기성).
     // SocialController
-    //$r->addRoute('POST', '/band', ['SocialController', 'createPost']);
+    $r->addRoute('POST', '/bands/{bandId}/post', ['SocialController', 'createPost']);
+    $r->addRoute('POST', '/bands/{bandId}/post/{postId}/comment', ['SocialController', 'createComment']);
+
 });
 
 // Fetch method and URI from somewhere
