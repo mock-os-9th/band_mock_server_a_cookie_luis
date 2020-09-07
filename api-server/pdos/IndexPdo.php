@@ -3,8 +3,7 @@
 function getAd()
 {
     $pdo = pdoSqlConnect();
-    $query = "select adsId,
-       adsMainImg,
+    $query = "select adsMainImg,
        adsUrl
 from Ads
 order by rand() limit 1;";
@@ -200,6 +199,121 @@ function isValidBandId($bandId)
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
     $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isValidPostId($postId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandPost WHERE postId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$postId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isValidCommentId($commentId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandComment WHERE commentId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$commentId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isValidParentCommentId($parentCommentId, $postId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT postId FROM BandComment WHERE commentId = ?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$parentCommentId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["postId"]) == $postId;
+}
+
+function isValidEmoticonId($emoticonId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM Emoticon WHERE emoticonId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$emoticonId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isValidExpressionId($expressionId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM Expression WHERE expressionId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$expressionId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isExistUserExpressionOnPost($postId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandPostExpression WHERE postId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]["exist"]);
+}
+
+function isExistUserExpressionOnComment($commentId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandCommentExpression WHERE commentId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$commentId, $userId]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 

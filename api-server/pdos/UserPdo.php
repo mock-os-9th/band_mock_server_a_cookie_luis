@@ -111,7 +111,6 @@ function getExistUserByEmail($email){
     return $res[0];
 }
 
-
 function getNaverUserInfo($token)
 {
     $token = str_replace(" ", "+", $token);

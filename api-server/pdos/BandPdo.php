@@ -26,11 +26,18 @@ where BandUser.userId = ?;";
 function getBandInfo($bandId)
 {
     $pdo = pdoSqlConnect();
-    $query = "select bandImg,
-        bandName,
-        isOpened,
-        count(userId) as countUser
-from BandUser left join Band on Band.bandId = BandUser.bandId
+    $query = "select Band.bandId,
+       Band.bandName,
+       Band.isOpened,
+       Band.color,
+       IF(BC.bandMemberNo is NULL, 0, BC.bandMemberNo) as bandMemberNo,
+       Band.bandImg,
+       IF(Band.bandIntroduction is NULL, 'NULL', Band.bandIntroduction) as bandIntroduction,
+       date_format(Band.createdAt, '%Y년 %m월') as createdAt
+
+from Band left join (select bandId, count(*) as bandMemberNo
+from BandUser group by bandId) as BC
+on Band.bandId = BC.bandId
 where Band.bandId = ?;";
 
     $st = $pdo->prepare($query);
@@ -42,7 +49,7 @@ where Band.bandId = ?;";
     $st = null;
     $pdo = null;
 
-    return $res;
+    return $res[0];
 }
 
 function createBand($bandName, $bandImg, $isOpened)

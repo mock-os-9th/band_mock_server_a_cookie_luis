@@ -30,18 +30,21 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/bands', ['BandController', 'getUserBand']); //09.03 jwt에 맞게 수정함(기성).
     $r->addRoute('POST', '/band', ['BandController', 'createBand']); //09.03 band 생성 만듬(기성).
     $r->addRoute('PATCH', '/bandProfile', ['BandController', 'updateBandProfile']); //09.04 밴드 프로필 수정 만듬(기성).
-    $r->addRoute('GET', '/band/{bandid}', ['BandController', 'getBandDetail']); //09.04 밴드 상세 정보 조회 만듬(기성).
+    $r->addRoute('GET', '/bandLeader/{bandId}', ['BandController', 'getBandDetail']); //09.04 밴드 리더 상세 정보 조회 만듬(기성).
     $r->addRoute('POST', '/enterpriseBand', ['BandController', 'createEnterpriseBand']); //09.05 사업자 밴드 생성 만듬(기성).
     $r->addRoute('PATCH', '/bandIntroduction', ['BandController', 'updateBandIntroduction']); //09.06 밴드 소개 수정 만듬(기성).
     $r->addRoute('POST', '/bandEnter', ['BandController', 'createBandEnter']); //09.06 밴드 접속 유저 생성 만듬(기성).
     $r->addRoute('PATCH', '/bandMember', ['BandController', 'updateBandMember']); //09.06 밴드 인원수 수정 만듬(기성).
     $r->addRoute('POST', '/bandRestrictAge', ['BandController', 'createBandRestrictAge']); //09.06 밴드 나이 제한 생성 만듬(기성).
     $r->addRoute('POST', '/bandRestrictGender', ['BandController', 'createBandRestrictGender']); //09.06 밴드 성성 제한 생성 만듬(기성).
-    $r->addRoute('GET', '/bandTag/{bandid}', ['BandController', 'getBandTag']); //09.07 밴드 태그 조회 만듬(기성).
+    $r->addRoute('GET', '/bandTag/{bandId}', ['BandController', 'getBandTag']); //09.07 밴드 태그 조회 만듬(기성).
     $r->addRoute('POST', '/bandTag', ['BandController', 'createBandTag']); //09.07 밴드 태그 생성 만듬(기성).
+    $r->addRoute('GET', '/bandNormal/{bandId}', ['BandController', 'getBandInfo']); //09.07 밴드 일반 유저 간단 정보 조회 만듬(기성).
     // SocialController
-    $r->addRoute('POST', '/bands/{bandId}/post', ['SocialController', 'createPost']);
-    $r->addRoute('POST', '/bands/{bandId}/post/{postId}/comment', ['SocialController', 'createComment']);
+    $r->addRoute('POST', '/post', ['SocialController', 'createPost']);
+    $r->addRoute('POST', '/comment', ['SocialController', 'createComment']);
+    $r->addRoute('POST', '/expression', ['SocialController', 'createExpression']);
+    $r->addRoute('GET', '/band/{bandId}/posts', ['SocialController', 'getBandPost']);
 
 });
 

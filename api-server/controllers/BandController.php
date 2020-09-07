@@ -77,7 +77,7 @@ try {
 
         case "getBandDetail":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = $vars['bandid'];
+            $bandId = $vars['bandId'];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
                 $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
@@ -103,7 +103,7 @@ try {
             }
 
             $res->result = getBandDetail($bandId);
-            $res = returnMake($res, TRUE, 100, "밴드 상세 조회 성공.");
+            $res = returnMake($res, TRUE, 100, "밴드 리더 상세 정보 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
@@ -528,7 +528,7 @@ try {
 
         case "getBandTag":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $bandId = intval($vars['bandid']);
+            $bandId = intval($vars['bandId']);
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
                 $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
@@ -620,6 +620,39 @@ try {
 
             $res->result = createBandTag($req->bandId, $tagContent);
             $res = returnMake($res, TRUE, 100, "밴드 태그 생성 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "getBandInfo":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $bandId = $vars['bandId'];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!isValidBandID($bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUser($bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 202, "밴드 유저가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = getBandInfo($bandId);
+            $res = returnMake($res, TRUE, 100, "밴드 일반 유저 간단 정보 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
