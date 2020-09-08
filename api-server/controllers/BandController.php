@@ -747,6 +747,41 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+        case "getBandSearch":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $content = $_GET['content'];
+            $page = intval($_GET['page']);
+            echo $page;
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if(empty($content)){
+                $res = returnMake($res, FALSE, 201, "검색 내용이 비었습니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $result = getBandSearch($content);
+
+            if($result == null){
+                $res->result = null;
+            }
+            else {
+                $res->result->bandSearchInfo = $result;
+            }
+            $res = returnMake($res, TRUE, 100, "밴드 검색 결과 조회 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);

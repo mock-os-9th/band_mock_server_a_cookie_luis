@@ -286,17 +286,40 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
-            $page = 0;
+            // paging을 쿼리 스트링으로 넣어줬을 경우
             if(!empty($_GET['paging'])){
+                if(intval($_GET['paging']) < 0){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 202;
+                    $res->message = "paging 값은 음수일 수 없음";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
                 $page = intval($_GET['paging']);
             }
+            else{
+                $page = 0;
+            }
             $res->result->postInfo = getBandPost(intval($vars['bandId']), $page);
-            http_response_code(200);
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "유저가 가입한 밴드 조회 성공";
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            return;
+            if(empty($res->result->postInfo)){
+                http_response_code(200);
+                unset($res->result);
+                $res->isSuccess = TRUE;
+                $res->code = 101;
+                $res->message = "게시물이 없음";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            else{
+                http_response_code(200);
+                $res->isSuccess = TRUE;
+                $res->code = 100;
+                $res->message = "밴드 게시물 조회 성공";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);

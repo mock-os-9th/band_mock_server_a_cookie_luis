@@ -322,3 +322,36 @@ where bandId = ? and userId = ?;";
     $pdo = null;
 
 }
+
+function getBandSearch($content)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select Band.bandId,
+       Band.bandName,
+       IF(BC.bandMemberNo is NULL, 0, BC.bandMemberNo) as bandMemberNo,
+       Band.bandImg,
+       IF(Band.bandIntroduction is NULL, 'NULL', Band.bandIntroduction) as bandIntroduction,
+       LN.name as leaderName
+
+from Band left join (select bandId, count(*) as bandMemberNo
+from BandUser group by bandId) as BC
+on Band.bandId = BC.bandId
+left join (select BandUser.bandId, User.userId, User.name
+from BandUser left join User
+on BandUser.userId = User.userId
+where userType = '리더') as LN
+on Band.bandId = LN.bandId
+
+where Band.isOpened = 'Y' and Band.bandName like concat('%',?,'%');";
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$content]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
