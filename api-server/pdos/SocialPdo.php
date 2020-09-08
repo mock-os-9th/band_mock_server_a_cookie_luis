@@ -108,7 +108,7 @@ function createExpression($userId, $postId, $commentId, $expressionId){
 
 function getBandPost($bandId, $page){
     $pdo = pdoSqlConnect();
-    $query = "SELECT u.userId as userId, replace(u.name, '\r', '') as userName, u.profileImg as userProfile, bp.createdAt as postCreatedAt, replace(postContent, '\r', '') as postContent, replace(mediaUrl, '\r', '') as mediaUrl, replace(fileUrl, '\r', '') as fileUrl, replace(tagContent, '\r', '') as tagContent, numOfComment, numOfView, numOfExpression, u.userId as commentUserId, replace(name, '\r', '') as commentUserName, temp4.commentCreatedAt as commentCreatedAt, replace(commentContent, '\r', '') as commentContent
+    $query = "SELECT bp.postId as postId, u.userId as userId, replace(u.name, '\r', '') as userName, u.profileImg as userProfile, bp.createdAt as postCreatedAt, replace(postContent, '\r', '') as postContent, replace(mediaUrl, '\r', '') as mediaUrl, replace(fileUrl, '\r', '') as fileUrl, replace(tagContent, '\r', '') as tagContent, numOfComment, numOfView, numOfExpression, u.userId as commentUserId, replace(name, '\r', '') as commentUserName, temp4.commentCreatedAt as commentCreatedAt, replace(commentContent, '\r', '') as commentContent
 from User as u inner join BandPost as bp on u.userId = bp.userId
 inner join (SELECT postId, count(postId) as numOfComment from BandComment group by postId) as temp on bp.postId = temp.postId
 inner join (SELECT postId, count(postId) as numOfView from BandPostView group by postId) as temp2 on bp.postId = temp2.postId

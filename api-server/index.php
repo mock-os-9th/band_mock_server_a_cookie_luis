@@ -21,7 +21,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users', ['UserController', 'getExistUserInfo']);
     $r->addRoute('POST', '/users', ['UserController', 'createUser']);
     $r->addRoute('GET', '/users/info', ['UserController', 'getNaverUserInfo']);
-    $r->addRoute('GET', '/autologin', ['MainController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
+    $r->addRoute('GET', '/autologin', ['UserController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
     $r->addRoute('GET', '/jwt', ['UserController', 'validateJwt']); //09.03 jwt 유효성 검사 만듬(기성).
     $r->addRoute('POST', '/jwt', ['UserController', 'createJwt']); //09.03 jwt 생성 만듬(기성).
     // IndexController
@@ -40,6 +40,8 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/bandTag/{bandId}', ['BandController', 'getBandTag']); //09.07 밴드 태그 조회 만듬(기성).
     $r->addRoute('POST', '/bandTag', ['BandController', 'createBandTag']); //09.07 밴드 태그 생성 만듬(기성).
     $r->addRoute('GET', '/bandNormal/{bandId}', ['BandController', 'getBandInfo']); //09.07 밴드 일반 유저 간단 정보 조회 만듬(기성).
+    $r->addRoute('GET', '/bandUser/{bandId}', ['BandController', 'getBandUser']); //09.08 밴드에 가입한 유저 조회 만듬(기성).
+    $r->addRoute('PATCH', '/bandLeader', ['BandController', 'updateBandLeader']); //09.08 밴드 리더 변경 만듬(기성).
     // SocialController
     $r->addRoute('POST', '/post', ['SocialController', 'createPost']);
     $r->addRoute('POST', '/comment', ['SocialController', 'createComment']);

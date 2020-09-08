@@ -3,7 +3,8 @@
 function getAd()
 {
     $pdo = pdoSqlConnect();
-    $query = "select adsMainImg,
+    $query = "select adsId,
+        adsMainImg,
        adsUrl
 from Ads
 order by rand() limit 1;";
@@ -321,6 +322,152 @@ function isExistUserExpressionOnComment($commentId, $userId)
     $pdo = null;
 
     return intval($res[0]["exist"]);
+}
+
+
+function isValidBandUser($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isValidBandUserLeaderID($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ? and userType = '리더') AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+
+function isValidChangeMemberNo($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ? and to_days(now())-to_days(updatedAt) >= 1) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isValidRestrictAge($minAge, $maxAge)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT IF(?-? > 0, 0, 1) as exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$minAge, $maxAge]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isAlreadyExistBandIdAge($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandRegisterCondition WHERE bandId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isValidRestrictGender($gender)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT IF('F' = ? or 'M' = ?, 1, 0) as exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$gender, $gender]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isAlreadyExistBandIdGender($bandId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandRegisterGender WHERE bandId = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
+}
+
+function isAlreadyExistBandTag($bandId, $tagContent)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandTag WHERE bandId = ? and tagContent = ?) AS exist;";
+
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$bandId, $tagContent]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+
 }
 // CREATE
 //    function addMaintenance($message){

@@ -656,7 +656,97 @@ try {
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
-            
+
+        case "getBandUser":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $bandId = intval($vars['bandId']);
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandID($bandId)) {
+                $res = returnMake($res, FALSE, 201, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!isValidBandUser($bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 202, "밴드 유저가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $result = getBandUser($bandId);
+
+            if($result == null){
+                $res->result = null;
+            }
+            else {
+                $res->result->userInfo = $result;
+            }
+            $res = returnMake($res, TRUE, 100, "밴드에 가입한 유저 조회 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "updateBandLeader":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->userId)) {
+                $res = returnMake($res, FALSE, 204, "유저 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandUser($req->bandId, $req->userId)) {
+                $res = returnMake($res, FALSE, 205, "리더로 변경할 유저가 밴드에 가입되어있지 않습니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = updateBandLeader($req->bandId, $data->userId, $req->userId);
+            $res = returnMake($res, TRUE, 100, "밴드 리더 변경 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);
