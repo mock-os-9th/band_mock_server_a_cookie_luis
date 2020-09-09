@@ -323,7 +323,7 @@ where bandId = ? and userId = ?;";
 
 }
 
-function getBandSearch($content)
+function getBandSearch($content, $page)
 {
     $pdo = pdoSqlConnect();
     $query = "select Band.bandId,
@@ -342,11 +342,44 @@ on BandUser.userId = User.userId
 where userType = '리더') as LN
 on Band.bandId = LN.bandId
 
-where Band.isOpened = 'Y' and Band.bandName like concat('%',?,'%');";
+where Band.isOpened = 'Y' and Band.bandName like concat('%',?,'%')
+order by Band.createdAt limit 10 offset ?;";
 
     $st = $pdo->prepare($query);
+    $st->bindParam(1, $content, PDO::PARAM_STR);
+    $st->bindParam(2, $page, PDO::PARAM_INT);
+    $st->execute();
     //    $st->execute([$param,$param]);
-    $st->execute([$content]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getBestBand()
+{
+    $pdo = pdoSqlConnect();
+    $query = "select Band.bandId,
+       Band.bandName,
+       IF(BN.bandMemberNo is NULL, 0, BN.bandMemberNo) as bandMemberNo,
+       Band.bandImg,
+       IF(Band.bandIntroduction is NULL, 'NULL', Band.bandIntroduction) as bandIntroduction
+
+from Band left join (select bandId, count(*) as bandMemberNo
+from BandUser group by bandId) as BN
+on Band.bandId = BN.bandId
+left join (select bandId, count(*) as enterCount
+from BandEnter where datediff(now(), createdAt) <= 14
+group by bandId) as BE
+on Band.bandId = BE.bandId
+order by enterCount desc limit 4;";
+
+    $st = $pdo->prepare($query);
+    $st->execute();
+    //    $st->execute([$param,$param]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 

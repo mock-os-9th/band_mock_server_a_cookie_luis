@@ -750,8 +750,7 @@ try {
         case "getBandSearch":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
             $content = $_GET['content'];
-            $page = intval($_GET['page']);
-            echo $page;
+            $page = $_GET['page'];
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
                 $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
@@ -769,7 +768,16 @@ try {
                 return;
             }
 
-            $result = getBandSearch($content);
+            if($page == null){
+                $res = returnMake($res, FALSE, 202, "페이지 번호가 비었습니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $page = intval($page);
+            $page = $page*10;
+            $result = getBandSearch($content, $page);
 
             if($result == null){
                 $res->result = null;
@@ -778,6 +786,29 @@ try {
                 $res->result->bandSearchInfo = $result;
             }
             $res = returnMake($res, TRUE, 100, "밴드 검색 결과 조회 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "getBestBand":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $result = getBestBand();
+
+            if($result == null){
+                $res->result = null;
+            }
+            else {
+                $res->result->bestBandInfo = $result;
+            }
+            $res = returnMake($res, TRUE, 100, "인기 밴드 조회 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;

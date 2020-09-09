@@ -23,7 +23,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users/info', ['UserController', 'getNaverUserInfo']);
     $r->addRoute('GET', '/autologin', ['UserController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
     $r->addRoute('GET', '/jwt', ['UserController', 'validateJwt']); //09.03 jwt 유효성 검사 만듬(기성).
-    $r->addRoute('POST', '/login', ['UserController', 'createJwt']); //09.03 jwt 생성 만듬(기성).-> 09.08 /login으로 변
+    $r->addRoute('POST', '/login', ['UserController', 'createJwt']); //09.03 jwt 생성 만듬(기성).-> 09.08 /login으로 변경
     // IndexController
     $r->addRoute('GET', '/ads', ['IndexController', 'getAd']); //09.03 jwt에 맞게 수정함(기성).
     // BandController
@@ -42,12 +42,18 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/bandNormal/{bandId}', ['BandController', 'getBandInfo']); //09.07 밴드 일반 유저 간단 정보 조회 만듬(기성).
     $r->addRoute('GET', '/bandUser/{bandId}', ['BandController', 'getBandUser']); //09.08 밴드에 가입한 유저 조회 만듬(기성).
     $r->addRoute('PATCH', '/bandLeader', ['BandController', 'updateBandLeader']); //09.08 밴드 리더 변경 만듬(기성).
-    $r->addRoute('GET', '/bandSearch', ['BandController', 'getBandSearch']); //09.08 밴드 검색 결과 조회 만듬(기성).
+    $r->addRoute('GET', '/bandSearch', ['BandController', 'getBandSearch']); //09.09 밴드 검색 결과 조회 만듬(기성).
+    $r->addRoute('GET', '/bestBand', ['BandController', 'getBestBand']); //09.09 인기 밴드 조회 만듬(기성).
     // SocialController
     $r->addRoute('POST', '/post', ['SocialController', 'createPost']);
     $r->addRoute('POST', '/comment', ['SocialController', 'createComment']);
     $r->addRoute('POST', '/expression', ['SocialController', 'createExpression']);
     $r->addRoute('GET', '/band/{bandId}/posts', ['SocialController', 'getBandPost']);
+    $r->addRoute('GET', '/post/{postId}/comments', ['SocialController', 'getPostComment']);
+    $r->addRoute('PATCH', '/post', ['SocialController', 'modifyPost']);
+    $r->addRoute('PATCH', '/comment', ['SocialController', 'modifyComment']);
+    $r->addRoute('DELETE', '/post/{postId}', ['SocialController', 'deletePost']);
+    $r->addRoute('DELETE', '/comment/{commentId}', ['SocialController', 'deleteComment']);
 
 });
 

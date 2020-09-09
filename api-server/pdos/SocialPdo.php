@@ -78,11 +78,12 @@ function getBandPost($bandId, $page){
     $pdo = pdoSqlConnect();
     $page *= 10;
     $query = "SELECT bp.postId as postId, u.userId as userId, replace(u.name, '\r', '') as userName, u.profileImg as userProfile, CASE
+    WHEN TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp) < 1 THEN '지금 막'
     WHEN TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp) < 60 THEN concat(TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp), '분 전')
     WHEN TIMESTAMPDIFF(HOUR, bp.createdAt, current_timestamp) < 12 THEN concat(TIMESTAMPDIFF(HOUR, bp.createdAt, current_timestamp), '시간 전')
     ELSE DATE_FORMAT(bp.createdAt, '%Y년 %m월%d일 %H:%i')
     END AS postCreatedAt,
-        replace(postContent, '\r', '') as postContent, replace(bp.mediaUrl, '\r', '') as mediaUrl, replace(bp.fileUrl, '\r', '') as fileUrl, replace(tagContent, '\r', '') as tagContent, numOfComment, numOfView, numOfExpression, u.userId as commentUserId, replace(commentUserName, '\r', '') as commentUserName, CASE
+        bp.createdAt as postCreatedAt, replace(postContent, '\r', '') as postContent, replace(bp.mediaUrl, '\r', '') as mediaUrl, replace(bp.fileUrl, '\r', '') as fileUrl, replace(tagContent, '\r', '') as tagContent, numOfComment, numOfView, numOfExpression, u.userId as commentUserId, replace(commentUserName, '\r', '') as commentUserName, CASE
     WHEN TIMESTAMPDIFF(MINUTE, firstComment.commentCreatedAt, current_timestamp) < 60 THEN concat(TIMESTAMPDIFF(MINUTE, firstComment.commentCreatedAt, current_timestamp), '분 전')
     WHEN TIMESTAMPDIFF(HOUR, firstComment.commentCreatedAt, current_timestamp) < 12 THEN concat(TIMESTAMPDIFF(HOUR, firstComment.commentCreatedAt, current_timestamp), '시간 전')
     ELSE DATE_FORMAT(firstComment.commentCreatedAt, '%Y년 %m월%d일 %H:%i')
@@ -101,7 +102,7 @@ where bp.bandId = ? and bp.isDeleted = 'N' order by bp.createdAt desc limit ?, 1
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
-    $query = "SELECT distinct bpe.expressionId as expressionId, replace(expressionImg, '\r', '') as expressionImg from BandPostExpression as bpe inner join Expression as e on bpe.expressionId = e.expressionId where postId = ?;";
+    $query = "SELECT u.userId as userId, name as userName, profileImg, bpe.expressionId as expressionId, replace(expressionImg, '\r', '') as expressionImg from BandPostExpression as bpe inner join Expression as e on bpe.expressionId = e.expressionId inner join User as u on u.userId = bpe.userId where postId = ?;";
     $st = $pdo->prepare($query);
     foreach($res as &$value){
         $st->execute([$value['postId']]);
@@ -114,3 +115,79 @@ where bp.bandId = ? and bp.isDeleted = 'N' order by bp.createdAt desc limit ?, 1
 
     return $res;
 }
+
+function getPostComment($postId, $page){
+    $pdo = pdoSqlConnect();
+    $page *= 10;
+    $query = "SELECT bc.commentId as commentId, parentCommentId, u.userId as userId, replace(u.name, '\r', '') as userName, u.profileImg as userProfile, CASE
+    WHEN TIMESTAMPDIFF(MINUTE, bc.createdAt, current_timestamp) < 1 THEN '지금 막'
+    WHEN TIMESTAMPDIFF(MINUTE, bc.createdAt, current_timestamp) < 60 THEN concat(TIMESTAMPDIFF(MINUTE, bc.createdAt, current_timestamp), '분 전')
+    WHEN TIMESTAMPDIFF(HOUR, bc.createdAt, current_timestamp) < 12 THEN concat(TIMESTAMPDIFF(HOUR, bc.createdAt, current_timestamp), '시간 전')
+    ELSE DATE_FORMAT(bc.createdAt, '%Y년 %m월%d일 %H:%i')
+    END AS commentCreatedAt,
+        replace(commentContent, '\r', '') as commentContent, replace(bc.mediaUrl, '\r', '') as mediaUrl, replace(bc.fileUrl, '\r', '') as fileUrl, replace(emoticonUrl, '\r', '') as emoticonUrl, numOfExpression
+from User as u inner join BandComment as bc on u.userId = bc.userId left join Emoticon as e on bc.emoticonId = e.emoticonId
+left join (SELECT commentId, count(commentId) as numOfExpression from BandCommentExpression group by commentId) as expressionNo on bc.commentId = expressionNo.commentId
+where bc.postId = ? and bc.isDeleted = 'N' order by bc.createdAt desc limit ?, 10;";
+    $st = $pdo->prepare($query);
+    $st->bindParam(1, $postId, PDO::PARAM_INT);
+    $st->bindParam(2, $page, PDO::PARAM_INT);
+    $st->execute();
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $query = "SELECT u.userId as userId, name as userName, profileImg, bce.expressionId as expressionId, replace(expressionImg, '\r', '') as expressionImg from BandCommentExpression as bce inner join Expression as e on bce.expressionId = e.expressionId inner join User as u on u.userId = bce.userId where commentId = ?;";
+    $st = $pdo->prepare($query);
+    foreach($res as &$value){
+        $st->execute([$value['commentId']]);
+        $st->setFetchMode(PDO::FETCH_ASSOC);
+        $value['expressionList'] = $st->fetchAll();
+    }
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function modifyPost($postId, $text, $media, $tag, $file){
+    $pdo = pdoSqlConnect();
+    $query = "update BandPost SET postContent = ?, mediaUrl = ?, fileUrl = ?, tagContent = ? where postId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$text, $media, $file, $tag, $postId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function modifyComment($commentId, $text, $media, $file, $emoticonId){
+    $pdo = pdoSqlConnect();
+    $query = "update BandComment SET commentContent = ?, mediaUrl = ?, fileUrl = ?, emoticonId = ? where commentId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$text, $media, $file, $emoticonId, $commentId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function deletePost($postId){
+    $pdo = pdoSqlConnect();
+    $query = "update BandPost SET isDeleted = 'Y' where postId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function deleteComment($commentId){
+    $pdo = pdoSqlConnect();
+    $query = "update BandComment SET isDeleted = 'Y' where commentId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$commentId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+

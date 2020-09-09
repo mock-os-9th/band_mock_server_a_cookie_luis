@@ -212,7 +212,7 @@ function isValidBandId($bandId)
 function isValidPostId($postId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM BandPost WHERE postId = ?) AS exist;";
+    $query = "SELECT EXISTS(SELECT * FROM BandPost WHERE postId = ? and isDeleted = 'N') AS exist;";
 
 
     $st = $pdo->prepare($query);
@@ -230,7 +230,7 @@ function isValidPostId($postId)
 function isValidCommentId($commentId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM BandComment WHERE commentId = ?) AS exist;";
+    $query = "SELECT EXISTS(SELECT * FROM BandComment WHERE commentId = ? and isDeleted = 'N') AS exist;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -469,6 +469,7 @@ function isAlreadyExistBandTag($bandId, $tagContent)
     return intval($res[0]["exist"]);
 
 }
+
 // CREATE
 //    function addMaintenance($message){
 //        $pdo = pdoSqlConnect();
