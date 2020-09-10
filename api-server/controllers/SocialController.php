@@ -568,7 +568,7 @@ try {
                 return;
             }
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
-            // 게시글 입력 누락 확인
+            // 게시글 id 입력 누락 확인
             if(empty(intval($vars['postId']))){
                 http_response_code(201);
                 $res->isSuccess = FALSE;
@@ -593,7 +593,435 @@ try {
             $res->message = "게시글 삭제 성공";
             echo json_encode($res, JSON_NUMERIC_CHECK);
             return;
+
+        case "deleteExpression":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 게시글 id 혹은 댓글 id 입력 누락 확인
+            if(empty($req->postId) && empty($req->commentId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "게시글 id, 댓글 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 게시글 id와 댓글 id 이중 입력 확인
+            if(!empty($req->postId) && !empty($req->commentId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "게시글 id, 댓글 id 둘 중 하나만 입력해야함";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 게시글 id를 입력했을 경우
+            if(!empty($req->postId)){
+                // 형식에 맞는 입력 검사
+                if(!is_int($req->postId)){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 206;
+                    $res->message = "형식에 맞지 않은 입력";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                // 유효한 게시글 id 검사
+                if (!isValidPostId($req->postId)) {
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 203;
+                    $res->message = "존재하지 않는 게시글 ID";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                // 존재하는 표정인지 검사
+                if(!isExistPostExpression($req->postId, $data->userId)){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 205;
+                    $res->message = "존재하지 않는 유저의 표정";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                deletePostExpression($req->postId, $data->userId);
+            }
+            // 댓글 id를 입력했을 경우
+            else{
+                // 형식에 맞는 입력 검사
+                if(!is_int($req->commentId)){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 206;
+                    $res->message = "형식에 맞지 않은 입력";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                // 유효한 댓글 id 검사
+                if (!empty($req->commentId) && !isValidCommentId($req->commentId)) {
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 204;
+                    $res->message = "존재하지 않는 댓글 ID";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                // 존재하는 표정인지 검사
+                if(!isExistCommentExpression($req->commentId, $data->userId)){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 205;
+                    $res->message = "존재하지 않는 유저의 표정";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                deleteCommentExpression($req->commentId, $data->userId);
+            }
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "표정 삭제 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
+
+        case "createBookmark":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 게시글 id 입력 누락 확인
+            if(empty($req->postId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "게시글 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 형식에 맞는 입력 검사
+            if(!is_int($req->postId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 204;
+                $res->message = "형식에 맞지 않은 입력";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 유효한 게시글 id 검사
+            if (!isValidPostId($req->postId)) {
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "존재하지 않는 게시글 ID";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            if(isExistBookmark($req->postId, $data->userId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 203;
+                $res->message = "이미 추가된 북마크";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            createBookmark($req->postId, $data->userId);
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "북마크 생성 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
+
+        case "deleteBookmark":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 게시글 id 입력 누락 확인
+            if(empty($req->postId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "게시글 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 형식에 맞는 입력 검사
+            if(!is_int($req->postId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 203;
+                $res->message = "형식에 맞지 않은 입력";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            if(!isExistBookmark($req->postId, $data->userId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "존재하지 않는 북마크";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            deleteBookmark($req->postId, $data->userId);
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "북마크 삭제 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
+
+        case "createBlockedBandUser":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 밴드 id 입력 누락 확인
+            if(empty($req->bandId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "밴드 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 차단 유저 id 입력 누락 확인
+            if(empty($req->blockedUserId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "차단 유저 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 형식에 맞는 입력 검사
+            if(!is_int($req->bandId) || !is_int($req->blockedUserId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 207;
+                $res->message = "형식에 맞지 않은 입력";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 유효한 게시글 id 검사
+            if (!isValidBandId($req->bandId)) {
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 203;
+                $res->message = "존재하지 않는 밴드 id";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 유저 id 유효성 검사
+            if(!isValidBandUser($req->bandId, $data->userId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 204;
+                $res->message = "밴드에 가입되지 않는 유저 id";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 차단할 유저 id 유효성 검사
+            if(!isValidBandUser($req->bandId, $req->blockedUserId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 205;
+                $res->message = "밴드에 가입되지 않는 차단할 유저 id";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 이미 추가된 차단 유저인지 검사
+            if(isExistUserBandBlockedUser($req->bandId, $data->userId, $req->blockedUserId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 206;
+                $res->message = "이미 존재하는 차단 유저 id";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            createBlockedBandUser($req->bandId, $data->userId, $req->blockedUserId);
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "차단 유저 생성 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
+
+        case "getNewPostFeed":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // paging을 쿼리 스트링으로 넣어줬을 경우
+            if(!empty($_GET['paging'])){
+                if(intval($_GET['paging']) < 0){
+                    http_response_code(200);
+                    $res->isSuccess = FALSE;
+                    $res->code = 201;
+                    $res->message = "paging 값은 음수일 수 없음";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    return;
+                }
+                $page = intval($_GET['paging']);
+            }
+            else{
+                $page = 0;
+            }
+            $res->result->postInfo = getNewPostFeed($data->userId, $page);
+            if(empty($res->result->postInfo)){
+                http_response_code(200);
+                unset($res->result);
+                $res->isSuccess = TRUE;
+                $res->code = 101;
+                $res->message = "게시물이 없음";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            else{
+                http_response_code(200);
+                $res->isSuccess = TRUE;
+                $res->code = 100;
+                $res->message = "새글 피드 게시물 조회 성공";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+        case "createHiddenPost":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 게시글 id 입력 누락 확인
+            if(empty($req->postId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "게시글 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 형식에 맞는 입력 검사
+            if(!is_int($req->postId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 204;
+                $res->message = "형식에 맞지 않은 입력";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 유효한 게시글 id 검사
+            if (!isValidPostId($req->postId)) {
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "존재하지 않는 게시글 ID";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            if(isExistHiddenPost($req->postId, $data->userId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 203;
+                $res->message = "이미 추가된 숨긴 게시물";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            createHiddenPost($req->postId, $data->userId);
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "숨긴 게시물 생성 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
+
+        case "createBlockedBand":
+            // 유효한 토큰 검사
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            // 밴드 id 입력 누락 확인
+            if(empty($req->bandId)){
+                http_response_code(201);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "밴드 id 입력 누락";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 형식에 맞는 입력 검사
+            if(!is_int($req->bandId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 204;
+                $res->message = "형식에 맞지 않은 입력";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 유효한 밴드 id 검사
+            if (!isValidBandId($req->bandId)) {
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 202;
+                $res->message = "존재하지 않는 밴드 id";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            // 이미 차단된 밴드인지 검사
+            if(isExistUserBlockedBand($req->bandId, $data->userId)){
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 203;
+                $res->message = "이미 차단된 밴드";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+            createBlockedBand($req->bandId, $data->userId);
+            http_response_code(200);
+            $res->isSuccess = TRUE;
+            $res->code = 100;
+            $res->message = "차단 밴드 생성 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            return;
     }
+
+
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);
 }

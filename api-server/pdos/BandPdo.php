@@ -9,7 +9,7 @@ function getUserBand($userId)
        userType
 from BandUser left join Band on
 BandUser.bandId = Band.bandId
-where BandUser.userId = ?;";
+where BandUser.userId = ? and BandUser.isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -36,9 +36,9 @@ function getBandInfo($bandId)
        date_format(Band.createdAt, '%Y년 %m월') as createdAt
 
 from Band left join (select bandId, count(*) as bandMemberNo
-from BandUser group by bandId) as BC
+from BandUser where isDeleted = 'N' group by bandId) as BC
 on Band.bandId = BC.bandId
-where Band.bandId = ?;";
+where Band.bandId = ? and Band.isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -98,7 +98,7 @@ function getOriginalProfile($bandId)
         bandImg,
         color
 from Band
-where bandId = ?;";
+where bandId = ? and Band.isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -132,7 +132,7 @@ function getBandDetail($bandId)
        Band.isSecretAvailable
 
 from Band left join (select bandId, count(*) as bandMemberNo
-from BandUser group by bandId) as BC
+from BandUser where isDeleted = 'N' group by bandId) as BC
 on Band.bandId = BC.bandId
 left join BandRegisterQuestion
 on Band.bandId = BandRegisterQuestion.bandId
@@ -140,7 +140,7 @@ left join BandRegisterGender
 on Band.bandId = BandRegisterGender.bandId
 left join BandRegisterCondition
 on Band.bandId = BandRegisterCondition.bandId
-where Band.bandId = ?;";
+where Band.bandId = ? and Band.isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -254,7 +254,7 @@ function getBandTag($bandId)
     $pdo = pdoSqlConnect();
     $query = "select tagContent
 from BandTag
-where bandId = ?;";
+where bandId = ? and isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -291,7 +291,7 @@ function getBandUser($bandId)
 
 from BandUser left join User
 on BandUser.userId = User.userId
-where BandUser.bandId = ?;";
+where BandUser.bandId = ? and BandUser.isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -342,7 +342,7 @@ on BandUser.userId = User.userId
 where userType = '리더') as LN
 on Band.bandId = LN.bandId
 
-where Band.isOpened = 'Y' and Band.bandName like concat('%',?,'%')
+where Band.isOpened = 'Y' and Band.isDeleted = 'N' and Band.bandName like concat('%',?,'%')
 order by Band.createdAt limit 10 offset ?;";
 
     $st = $pdo->prepare($query);
@@ -375,6 +375,7 @@ left join (select bandId, count(*) as enterCount
 from BandEnter where datediff(now(), createdAt) <= 14
 group by bandId) as BE
 on Band.bandId = BE.bandId
+where Band.isDeleted = 'N'
 order by enterCount desc limit 4;";
 
     $st = $pdo->prepare($query);
@@ -387,4 +388,32 @@ order by enterCount desc limit 4;";
     $pdo = null;
 
     return $res;
+}
+
+function deleteBandUser($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "update BandUser
+set isDeleted = 'Y'
+where bandId = ? and userId = ?";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId]);
+
+    $st = null;
+    $pdo = null;
+
+}
+
+function deleteBand($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "update BandUser
+set isDeleted = 'Y'
+where bandId = ? and userId = ?";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId]);
+
+    $st = null;
+    $pdo = null;
+
 }

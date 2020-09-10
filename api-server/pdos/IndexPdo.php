@@ -21,14 +21,14 @@ order by rand() limit 1;";
     return $res[0];
 }
 
-function isValidUser($id, $pw){
+function isValidUser($id){
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM User WHERE userId= ? AND userPw = ?) AS exist;";
+    $query = "SELECT EXISTS(SELECT * FROM User WHERE userId= ? and isDeleted = 'N') AS exist;";
 
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
-    $st->execute([$id, $pw]);
+    $st->execute([$id]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -87,7 +87,7 @@ function isValidAdsId($id)
 function isValidUsersId($id)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM User WHERE userId = ?) AS exist;";
+    $query = "SELECT EXISTS(SELECT * FROM User WHERE userId = ? and isDeleted = 'N') AS exist;";
 
 
     $st = $pdo->prepare($query);
@@ -124,7 +124,7 @@ function isValidNaverUser($naverId)
 function isValidEmailUser($email, $password)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT password FROM User WHERE email = ?;";
+    $query = "SELECT password FROM User WHERE email = ? and isDeleted = 'N';";
 
 
     $st = $pdo->prepare($query);
@@ -143,7 +143,7 @@ function isValidEmailUser($email, $password)
 function getIdFromEmailPw($email)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT userId FROM User WHERE email = ?;";
+    $query = "SELECT userId FROM User WHERE email = ? and isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     $st->execute([$email]);
@@ -160,7 +160,7 @@ function getIdFromEmailPw($email)
 function isValidPhoneUser($phone, $password)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT password FROM User WHERE phone = ?;";
+    $query = "SELECT password FROM User WHERE phone = ? and isDeleted = 'N';";
 
 
     $st = $pdo->prepare($query);
@@ -178,7 +178,7 @@ function isValidPhoneUser($phone, $password)
 function getIdFromPhonePw($phone)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT userId FROM User WHERE phone = ?;";
+    $query = "SELECT userId FROM User WHERE phone = ? and isDeleted = 'N';";
 
     $st = $pdo->prepare($query);
     $st->execute([$phone]);
@@ -194,7 +194,7 @@ function getIdFromPhonePw($phone)
 function isValidBandId($bandId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ?) AS exist;";
+    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ? and isDeleted = 'N') AS exist;";
 
 
     $st = $pdo->prepare($query);
@@ -328,8 +328,7 @@ function isExistUserExpressionOnComment($commentId, $userId)
 function isValidBandUser($bandId, $userId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ?) AS exist;";
-
+    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ? and isDeleted = 'N') AS exist;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -346,8 +345,7 @@ function isValidBandUser($bandId, $userId)
 function isValidBandUserLeaderID($bandId, $userId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ? and userType = '리더') AS exist;";
-
+    $query = "SELECT EXISTS(SELECT * FROM BandUser WHERE bandId = ? and userId = ? and userType = '리더' and isDeleted = 'N') AS exist;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -365,8 +363,7 @@ function isValidBandUserLeaderID($bandId, $userId)
 function isValidChangeMemberNo($bandId)
 {
     $pdo = pdoSqlConnect();
-    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ? and to_days(now())-to_days(updatedAt) >= 1) AS exist;";
-
+    $query = "SELECT EXISTS(SELECT * FROM Band WHERE bandId = ? and to_days(now())-to_days(updatedAt) >= 1 and isDeleted = 'N') AS exist;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -385,7 +382,6 @@ function isValidRestrictAge($minAge, $maxAge)
     $pdo = pdoSqlConnect();
     $query = "SELECT IF(?-? > 0, 0, 1) as exist;";
 
-
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
     $st->execute([$minAge, $maxAge]);
@@ -402,7 +398,6 @@ function isAlreadyExistBandIdAge($bandId)
 {
     $pdo = pdoSqlConnect();
     $query = "SELECT EXISTS(SELECT * FROM BandRegisterCondition WHERE bandId = ?) AS exist;";
-
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -421,7 +416,6 @@ function isValidRestrictGender($gender)
     $pdo = pdoSqlConnect();
     $query = "SELECT IF('F' = ? or 'M' = ?, 1, 0) as exist;";
 
-
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
     $st->execute([$gender, $gender]);
@@ -438,7 +432,6 @@ function isAlreadyExistBandIdGender($bandId)
 {
     $pdo = pdoSqlConnect();
     $query = "SELECT EXISTS(SELECT * FROM BandRegisterGender WHERE bandId = ?) AS exist;";
-
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
@@ -457,7 +450,6 @@ function isAlreadyExistBandTag($bandId, $tagContent)
     $pdo = pdoSqlConnect();
     $query = "SELECT EXISTS(SELECT * FROM BandTag WHERE bandId = ? and tagContent = ?) AS exist;";
 
-
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
     $st->execute([$bandId, $tagContent]);
@@ -468,6 +460,95 @@ function isAlreadyExistBandTag($bandId, $tagContent)
     $pdo = null;
     return intval($res[0]["exist"]);
 
+}
+
+function isExistPostExpression($postId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandPostExpression WHERE postId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+}
+
+function isExistCommentExpression($commentId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM BandCommentExpression WHERE commentId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$commentId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+}
+
+function isExistBookmark($postId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM Bookmark WHERE postId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+}
+
+function isExistUserBandBlockedUser($bandId, $userId, $blockedUserId){
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM UserBlockedBandUser WHERE bandId = ? and userId = ? and blockedUserId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId, $blockedUserId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+}
+
+function isExistHiddenPost($postId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM UserHidePost WHERE postId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
+}
+
+function isExistUserBlockedBand($bandId, $userId)
+{
+    $pdo = pdoSqlConnect();
+    $query = "SELECT EXISTS(SELECT * FROM UserBlockedBand WHERE bandId = ? and userId = ?) AS exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]["exist"]);
 }
 
 // CREATE

@@ -151,3 +151,49 @@ function registerUser($name, $email, $profileImg, $password, $phone, $birthday, 
     $st = null;
     $pdo = null;
 }
+
+function updateFirebaseToken($userId, $fcmToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "update User
+set fcmToken = ?
+where userId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$fcmToken, $userId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function sendBirthdayFCM()
+{
+    $pdo = pdoSqlConnect();
+    $query = "select u.userId, u.name
+from User as u
+where MONTH(now()) = MONTH(u.birthday) and DAY(now()) = DAYOFMONTH(u.birthday);";
+    $st = $pdo->prepare($query);
+    $st->execute();
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $birthday = $st->fetchAll();
+
+    $query = "select fcmToken
+from (select distinct bandId
+from BandUser
+where userId = ? and isDeleted = 'N') as BandList join BandUser inner join User on BandUser.userId = User.userId
+where BandList.bandId = BandUser.bandId and BandUser.isDeleted = 'N' and User.userId != ?;";
+    $st = $pdo->prepare($query);
+    foreach($birthday as $value){
+        $notification = $value['name'].'님이 오늘 생일입니다!';
+        $st->execute([$value['userId'], $value['userId']]);
+        $st->setFetchMode(PDO::FETCH_ASSOC);
+        $fcmToken = $st->fetchAll();
+//        if(sendFcm($fcmToken, $notification ,$data, $key, $deviceType) == false){
+//            return false;
+//        }
+    }
+
+    $st = null;
+    $pdo = null;
+
+    return true;
+}

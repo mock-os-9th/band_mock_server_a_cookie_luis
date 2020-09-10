@@ -503,6 +503,56 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+        case "updateFirebaseToken":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_string($req->fcmToken)) {
+                $res = returnMake($res, FALSE, 204, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            $res->result = updateFirebaseToken($data->userId, $req->fcmToken);
+            $res = returnMake($res, TRUE, 100, "Fcm 토큰 변경 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "sendBirthdayFCM":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if(sendBirthdayFCM()) {
+                http_response_code(200);
+                $res->isSuccess = TRUE;
+                $res->code = 100;
+                $res->message = "생일 알림 FCM 전송 성공";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+            else{
+                http_response_code(200);
+                $res->isSuccess = FALSE;
+                $res->code = 201;
+                $res->message = "FCM 토큰 인증 실패";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
 
     }
 } catch (\Exception $e) {

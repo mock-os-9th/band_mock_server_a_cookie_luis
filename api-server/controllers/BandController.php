@@ -121,7 +121,7 @@ try {
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
             if (!is_int($req->bandId)) {
-                $res = returnMake($res, FALSE, 204, "형");
+                $res = returnMake($res, FALSE, 204, "밴드 id가 정수형이 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }
@@ -699,7 +699,6 @@ try {
 
         case "updateBandLeader":
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
-            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
             if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
                 $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
@@ -707,6 +706,8 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
             if (!is_int($req->bandId)) {
                 $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
@@ -809,6 +810,109 @@ try {
                 $res->result->bestBandInfo = $result;
             }
             $res = returnMake($res, TRUE, 100, "인기 밴드 조회 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "deleteBandUser":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUserLeaderID($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 203, "밴드 리더가 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!is_int($req->userId)) {
+                $res = returnMake($res, FALSE, 204, "유저 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidUsersID($req->userId)) {
+                $res = returnMake($res, FALSE, 205, "존재 하지 않는 유저 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUser($req->bandId, $req->userId)) {
+                $res = returnMake($res, FALSE, 206, "존재 하지 않는 밴드 유저 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = deleteBandUser($req->bandId, $req->userId);
+            $res = returnMake($res, TRUE, 100, "멤버 강퇴 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "deleteBand":
+            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+
+            if (!isValidHeader($jwt, JWT_SECRET_KEY)) {
+                $res = returnMake($res, FALSE, 200, "유효하지 않은 토큰입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
+
+            if (!is_int($req->bandId)) {
+                $res = returnMake($res, FALSE, 201, "밴드 id가 정수형이 아닙니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                return;
+            }
+
+            if (!isValidBandID($req->bandId)) {
+                $res = returnMake($res, FALSE, 202, "존재 하지 않는 밴드 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidUsersID($data->userId)) {
+                $res = returnMake($res, FALSE, 203, "존재 하지 않는 유저 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isValidBandUser($req->bandId, $data->userId)) {
+                $res = returnMake($res, FALSE, 204, "존재 하지 않는 밴드 유저 id 입니다.");
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            $res->result = deleteBand($req->bandId, $data->userId);
+            $res = returnMake($res, TRUE, 100, "밴드 탈퇴 성공.");
             http_response_code(200);
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;

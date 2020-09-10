@@ -172,7 +172,30 @@ function modifyComment($commentId, $text, $media, $file, $emoticonId){
 
 function deletePost($postId){
     $pdo = pdoSqlConnect();
+    // 게시글 삭제
     $query = "update BandPost SET isDeleted = 'Y' where postId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId]);
+
+    // 게시글 표정 삭제
+    $query = "DELETE from BandPostExpression where postId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId]);
+
+    // 게시글 댓글 표정 삭제
+    $query = "SELECT commentId from BandComment where isDeleted = 'N' and postId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId]);
+    $st->setFetchMode(PDO::FETCH_NUM);
+    $res = $st->fetchAll();
+    $query = "DELETE from BandCommentExpression where commentId = ?;";
+    foreach($res as $value){
+        $st = $pdo->prepare($query);
+        $st->execute($value);
+    }
+
+    // 게시글 댓글 삭제
+    $query = "update BandComment SET isDeleted = 'Y' where postId = ?;";
     $st = $pdo->prepare($query);
     $st->execute([$postId]);
 
@@ -186,8 +209,122 @@ function deleteComment($commentId){
     $st = $pdo->prepare($query);
     $st->execute([$commentId]);
 
+    $query = "DELETE from BandCommentExpression where commentId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$commentId]);
+
     $st = null;
     $pdo = null;
 }
 
+function deletePostExpression($postId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "DELETE from BandPostExpression where postId = ? and userId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
 
+    $st = null;
+    $pdo = null;
+}
+
+function deleteCommentExpression($commentId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "DELETE from BandCommentExpression where commentId = ? and userId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$commentId, $userId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function createBookmark($postId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "INSERT into Bookmark (postId, userId) values (?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function deleteBookmark($postId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "DELETE from Bookmark where postId = ? and userId = ?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function createBlockedBandUser($bandId, $userId, $blockedUserId){
+    $pdo = pdoSqlConnect();
+    $query = "INSERT into UserBlockedBandUser (bandId, userId, blockedUserId) values (?, ?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId, $blockedUserId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function getNewPostFeed($userId, $page){
+    $pdo = pdoSqlConnect();
+    $page *= 10;
+    $query = "SELECT bp.postId as postId, u.userId as userId, replace(u.name, '\r', '') as userName, u.profileImg as userProfile, CASE
+    WHEN TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp) < 1 THEN '지금 막'
+    WHEN TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp) < 60 THEN concat(TIMESTAMPDIFF(MINUTE, bp.createdAt, current_timestamp), '분 전')
+    WHEN TIMESTAMPDIFF(HOUR, bp.createdAt, current_timestamp) < 12 THEN concat(TIMESTAMPDIFF(HOUR, bp.createdAt, current_timestamp), '시간 전')
+    ELSE DATE_FORMAT(bp.createdAt, '%Y년 %m월%d일 %H:%i')
+    END AS postCreatedAt,
+        replace(postContent, '\r', '') as postContent, replace(bp.mediaUrl, '\r', '') as mediaUrl, replace(bp.fileUrl, '\r', '') as fileUrl, replace(tagContent, '\r', '') as tagContent, numOfComment, numOfView, numOfExpression, u.userId as commentUserId, replace(commentUserName, '\r', '') as commentUserName, CASE
+    WHEN TIMESTAMPDIFF(MINUTE, firstComment.commentCreatedAt, current_timestamp) < 60 THEN concat(TIMESTAMPDIFF(MINUTE, firstComment.commentCreatedAt, current_timestamp), '분 전')
+    WHEN TIMESTAMPDIFF(HOUR, firstComment.commentCreatedAt, current_timestamp) < 12 THEN concat(TIMESTAMPDIFF(HOUR, firstComment.commentCreatedAt, current_timestamp), '시간 전')
+    ELSE DATE_FORMAT(firstComment.commentCreatedAt, '%Y년 %m월%d일 %H:%i')
+    END AS commentCreatedAt, replace(commentContent, '\r', '') as commentContent
+from User as u inner join BandPost as bp on u.userId = bp.userId
+left join (SELECT postId, count(postId) as numOfComment from BandComment where isDeleted = 'N' group by postId) as commentNo on bp.postId = commentNo.postId
+left join (SELECT postId, count(postId) as numOfView from BandPostView group by postId) as viewNo on bp.postId = viewNo.postId
+left join (SELECT postId, count(postId) as numOfExpression from BandPostExpression group by postId) as expressionNo on bp.postId = expressionNo.postId
+left join (SELECT bc.postId as postId, u.userId as commentUserId, name as commentUserName, bc.createdAt as commentCreatedAt, commentContent from User as u
+left join BandComment as bc on u.userId = bc.userId where commentId in (Select max(commentId) as commentId from BandComment where isDeleted = 'N' group by postId)) as firstComment on bp.postId = firstComment.postId
+where bp.bandId in (SELECT bandId from BandUser where userId = ?) and bp.isDeleted = 'N' order by bp.createdAt desc limit ?, 10;";
+    $st = $pdo->prepare($query);
+    $st->bindParam(1, $userId, PDO::PARAM_INT);
+    $st->bindParam(2, $page, PDO::PARAM_INT);
+    $st->execute();
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $query = "SELECT u.userId as userId, name as userName, profileImg, bpe.expressionId as expressionId, replace(expressionImg, '\r', '') as expressionImg from BandPostExpression as bpe inner join Expression as e on bpe.expressionId = e.expressionId inner join User as u on u.userId = bpe.userId where postId = ?;";
+    $st = $pdo->prepare($query);
+    foreach($res as &$value){
+        $st->execute([$value['postId']]);
+        $st->setFetchMode(PDO::FETCH_ASSOC);
+        $value['expressionList'] = $st->fetchAll();
+    }
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function createHiddenPost($postId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "INSERT into UserHidePost (postId, userId) values (?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$postId, $userId]);
+
+    $st = null;
+    $pdo = null;
+}
+
+function createBlockedBand($bandId, $userId){
+    $pdo = pdoSqlConnect();
+    $query = "INSERT into UserBlockedBand (bandId, userId) values (?, ?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$bandId, $userId]);
+
+    $st = null;
+    $pdo = null;
+}

@@ -28,7 +28,7 @@ function isValidHeader($jwt, $key)
 {
     try {
         $data = getDataByJWToken($jwt, $key);
-        if(!empty($data->naverId)){
+        if(!empty($data->naverId)){ //네이버 아이디로 로그인 할 경우
             return isValidNaverUser($data->naverId);
         }
         else {
@@ -44,46 +44,85 @@ function isValidHeader($jwt, $key)
     }
 }
 
-function sendFcm($fcmToken, $data, $key, $deviceType)
+function sendFcm($fcmToken, $notification ,$data, $key, $deviceType)
 {
     $url = 'https://fcm.googleapis.com/fcm/send';
-
     $headers = array(
         'Authorization: key=' . $key,
         'Content-Type: application/json'
     );
-
-    $fields['data'] = $data;
-
-    if ($deviceType == 'IOS') {
+    if ($deviceType == 'IOS') { //IOS인 경우
         $notification['title'] = $data['title'];
         $notification['body'] = $data['body'];
         $notification['sound'] = 'default';
         $fields['notification'] = $notification;
     }
-
-    $fields['to'] = $fcmToken;
+    if (is_array($fcmToken)) { //array인지 체크해서 다중으로 보낼건지, 아닌지 결정하는 부분
+        $fields['registration_ids'] = $fcmToken;
+    } else {
+        $fields['to'] = $fcmToken; //한명에게만 보낼 경우
+    }
+    $fields['notification'] = $notification; //상대방에게 갈 알람을 저장해줌
+    $fields['data'] = $data;
     $fields['content_available'] = true;
+    $fields['delay_while_idle'] = true;
     $fields['priority'] = "high";
-
     $fields = json_encode($fields, JSON_NUMERIC_CHECK);
-
 //    echo $fields;
-
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-
     $result = curl_exec($ch);
-    if ($result === FALSE) {
+    if ($result === FALSE) { //실패했을 경우
         //die('FCM Send Error: ' . curl_error($ch));
     }
     curl_close($ch);
-    return $result;
+    return $result; //성공했을 경우 true리턴
 }
+
+//function sendFcm($fcmToken, $data, $key, $deviceType)
+//{
+//    $url = 'https://fcm.googleapis.com/fcm/send';
+//
+//    $headers = array(
+//        'Authorization: key=' . $key,
+//        'Content-Type: application/json'
+//    );
+//
+//    $fields['data'] = $data;
+//
+//    if ($deviceType == 'IOS') {
+//        $notification['title'] = $data['title'];
+//        $notification['body'] = $data['body'];
+//        $notification['sound'] = 'default';
+//        $fields['notification'] = $notification;
+//    }
+//
+//    $fields['to'] = $fcmToken;
+//    $fields['content_available'] = true;
+//    $fields['priority'] = "high";
+//
+//    $fields = json_encode($fields, JSON_NUMERIC_CHECK);
+//
+////    echo $fields;
+//
+//    $ch = curl_init();
+//    curl_setopt($ch, CURLOPT_URL, $url);
+//    curl_setopt($ch, CURLOPT_POST, true);
+//    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+//
+//    $result = curl_exec($ch);
+//    if ($result === FALSE) {
+//        //die('FCM Send Error: ' . curl_error($ch));
+//    }
+//    curl_close($ch);
+//    return $result;
+//}
 
 function getTodayByTimeStamp()
 {
