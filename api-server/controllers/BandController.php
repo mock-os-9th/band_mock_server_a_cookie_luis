@@ -917,6 +917,26 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+        case "sendBandAnnualFCM":
+            $key = $_GET['key'];
+            $deviceType = $_GET['deviceType'];
+            $check = true;
+            $notification = null;
+            $data = null;
+
+            $result = sendBandAnnualFCM();
+            foreach($result as $row) {
+                $data->title = $row['bandName'];
+                $data->message = $row['data'];
+                json_encode($data, JSON_NUMERIC_CHECK);
+                $check = sendFcm($row['fcmToken'], $notification, $data, $key, $deviceType);
+            }
+            $res->result = null;
+            //$res->result = bandAnnualFCM($req->bandId, $data->userId);
+            $res = returnMake($res, TRUE, 100, "밴드 기념일 FCM 전송 성공.");
+            http_response_code(200);
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);

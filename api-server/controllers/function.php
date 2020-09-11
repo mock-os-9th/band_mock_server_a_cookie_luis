@@ -51,12 +51,7 @@ function sendFcm($fcmToken, $notification ,$data, $key, $deviceType)
         'Authorization: key=' . $key,
         'Content-Type: application/json'
     );
-    if ($deviceType == 'IOS') { //IOS인 경우
-        $notification['title'] = $data['title'];
-        $notification['body'] = $data['body'];
-        $notification['sound'] = 'default';
-        $fields['notification'] = $notification;
-    }
+
     if (is_array($fcmToken)) { //array인지 체크해서 다중으로 보낼건지, 아닌지 결정하는 부분
         $fields['registration_ids'] = $fcmToken;
     } else {

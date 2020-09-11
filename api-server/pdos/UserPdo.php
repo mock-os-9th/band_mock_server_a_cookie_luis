@@ -167,6 +167,7 @@ where userId = ?;";
 
 function sendBirthdayFCM()
 {
+    $data = array();
     $pdo = pdoSqlConnect();
     $query = "select u.userId, u.name
 from User as u
@@ -183,7 +184,8 @@ where userId = ? and isDeleted = 'N') as BandList join BandUser inner join User 
 where BandList.bandId = BandUser.bandId and BandUser.isDeleted = 'N' and User.userId != ?;";
     $st = $pdo->prepare($query);
     foreach($birthday as $value){
-        $notification = $value['name'].'님이 오늘 생일입니다!';
+        $data->title = '생일 알림';
+        $data->message = $value['name'].'님이 오늘 생일입니다!';
         $st->execute([$value['userId'], $value['userId']]);
         $st->setFetchMode(PDO::FETCH_ASSOC);
         $fcmToken = $st->fetchAll();

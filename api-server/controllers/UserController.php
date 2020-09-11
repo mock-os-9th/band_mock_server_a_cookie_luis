@@ -516,7 +516,7 @@ try {
             $data = getDataByJWToken($jwt, JWT_SECRET_KEY);
 
             if (!is_string($req->fcmToken)) {
-                $res = returnMake($res, FALSE, 204, "밴드 id가 정수형이 아닙니다.");
+                $res = returnMake($res, FALSE, 201, "fcm 토크이 문자열이 아닙니다.");
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 return;
             }

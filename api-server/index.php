@@ -14,7 +14,7 @@ date_default_timezone_set('Asia/Seoul');
 ini_set('default_charset', 'utf8mb4');
 
 //에러출력하게 하는 코드
-error_reporting(E_ALL); ini_set("display_errors", 1);
+//error_reporting(E_ALL); ini_set("display_errors", 1);
 
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     // UserController
@@ -24,7 +24,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/autologin', ['UserController', 'getAutoLogin']); //09.03 자동 로그인 만듬(기성).
     $r->addRoute('GET', '/jwt', ['UserController', 'validateJwt']); //09.03 jwt 유효성 검사 만듬(기성).
     $r->addRoute('POST', '/login', ['UserController', 'createJwt']); //09.03 jwt 생성 만듬(기성).-> 09.08 /login으로 변경
-    $r->addRoute('PATCH', '/firebaseToken', ['BandController', 'updateFirebaseToken']); //09.11 firebase 토큰 생성
+    $r->addRoute('PATCH', '/firebaseToken', ['UserController', 'updateFirebaseToken']); //09.11 firebase 토큰 생성
     $r->addRoute('GET', '/birthdayFCM', ['UserController', 'sendBirthdayFCM']);
     // IndexController
     $r->addRoute('GET', '/ads', ['IndexController', 'getAd']); //09.03 jwt에 맞게 수정함(기성).
@@ -48,6 +48,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/bestBand', ['BandController', 'getBestBand']); //09.09 인기 밴드 조회 만듬(기성).
     $r->addRoute('DELETE', '/bandFire', ['BandController', 'deleteBandUser']); //09.11 밴드 강퇴 만듬(기성).
     $r->addRoute('DELETE', '/bandOut', ['BandController', 'deleteBand']); //09.11 밴드 탈퇴 만듬(기성).
+    $r->addRoute('GET', '/bandAnnualFCM', ['BandController', 'sendBandAnnualFCM']); //09.11 밴드 주년 fcm 보내기(기성).
     // SocialController
     $r->addRoute('POST', '/post', ['SocialController', 'createPost']);
     $r->addRoute('POST', '/comment', ['SocialController', 'createComment']);

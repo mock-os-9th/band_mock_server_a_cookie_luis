@@ -417,3 +417,29 @@ where bandId = ? and userId = ?";
     $pdo = null;
 
 }
+
+function sendBandAnnualFCM()
+{
+    $pdo = pdoSqlConnect();
+    $query = "select User.fcmToken,
+        Band.bandName,
+       IF(YEAR(now())-YEAR(Band.createdAt) >= 1, concat(concat(Band.bandName, ' 밴드가 '), concat(YEAR(now())-YEAR(Band.createdAt), '주년 입니다.')), 0) as data
+
+from BandUser left join Band
+on BandUser.bandId = Band.bandId
+left join User
+on BandUser.userId = User.userId
+
+where if((MONTH(now()) = MONTH(Band.createdAt)) and (DAY(now()) = DAY(Band.createdAt)), YEAR(now())-YEAR(Band.createdAt), 0) = 1;";
+
+    $st = $pdo->prepare($query);
+    $st->execute();
+    //    $st->execute([$param,$param]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
